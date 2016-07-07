@@ -16,7 +16,8 @@ using namespace std;
 ////////////////////////////////////////////////////////////////////////////////////
 void Parse();
 vector <Point> vY;
-int bbbb = 5;
+vector <Segment> vX;
+
 
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -25,7 +26,6 @@ int bbbb = 5;
 
 void Parse()
 {
-	int a = 6;
 	fstream fin;
 	char temp[256]="for_merge.ctu3";
 	fin.open(temp,ios::in);
@@ -154,39 +154,60 @@ void Parse()
 					
 				int a; 
 				a=2;
-			}
-			
-		
-			//cout<<x<<"	"<<y<<endl;						
+			}				
 		}
-		
-		
-		
-		
-		//cout<<p<<endl;	
-	}
-	sort(vY.begin(),vY.end(),MySort1);
-	for(int i = 0 ; i < vY.size() ; i++) 
-	{
-		FindLinearEquation(vY[i]);
-		cout<<vY[i].x<<"	"<<vY[i].y<<endl;
-		for(int j = 0 ; j < vY[i].vS.size() ; j++)
-			{
-				cout<<vY[i].vS[j].Tx<<"	"<<vY[i].vS[j].Ty<<"	"<<endl<<vY[i].vS[j].a<<"	"<<vY[i].vS[j].b<<"	";
-			}
-		cout<<endl;
-		cout<<endl;
-	}
+	}	
 }
 
 
 int main(int argc, char** argv) 
 {
-	//A ggg;
-	//ggg.a.resize(100);
+
 	cout.setf( std::ios::fixed, std:: ios::floatfield );
 	cout.precision(10);
 	Parse();  
+	InitialY(vY);
+	
+	/*for(int i = 0 ; i < vY.size() ; i++) 
+	{
+		cout<<vY[i].x<<"	"<<vY[i].y<<endl;
+		for(int j = 0 ; j < vY[i].vS.size() ; j++)
+		{
+			cout<<vY[i].vS[j].Tx<<"	"<<vY[i].vS[j].Ty<<"	"<<endl<<vY[i].vS[j].a<<"	"<<vY[i].vS[j].b<<"	";
+		}
+		cout<<endl;
+		cout<<endl;
+	}*/
+	
+	while(vY.size() > 0)
+	{
+		double dTop = vY[0].y;
+		int iTemp = 0;
+		for(;;)
+		{
+		
+			if(vY[iTemp].y != dTop || iTemp >= vY.size())
+			{
+				vY.erase(vY.begin(),vY.begin()+iTemp);
+				break;
+			}
+			else if(vY[iTemp].y == dTop)
+			{
+				for(int i = 0 ; i < vY[iTemp].vS.size() ; i++)
+					vX.push_back(vY[iTemp].vS[i]);
+			}
+			iTemp++;
+		}
+		for(int i = 0 ; i < vX.size() ; i++)
+		{
+			cout<<vX[i].x<<"	"<<vX[i].y<<"	"<<vX[i].Tx<<"	"<<vX[i].Ty<<endl;
+		}		
+		cout<<vY.size()<<endl;
+		vX.clear();
+	}
+	
+	
+	
 	
 	//b.vS[0].iCase = 3;
 	//cout<<b.vS[0].iCase;

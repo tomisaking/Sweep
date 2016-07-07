@@ -1,4 +1,6 @@
 #include "Functions.h"
+#include <algorithm>
+
 bool MySort1 (Point lhs, Point rhs)
 { 	
 	//return lhs.dScore > rhs.dScore ; 
@@ -23,4 +25,11 @@ void FindLinearEquation(Point &p)
 	}	
 }
 
-
+void InitialY(vector <Point> &vY)
+{
+	sort(vY.begin(),vY.end(),MySort1);
+	for(int i = 0 ; i < vY.size() ; i++) 
+	{
+		FindLinearEquation(vY[i]);	
+	}
+}
