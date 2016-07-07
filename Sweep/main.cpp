@@ -54,6 +54,7 @@ void Parse()
 			sscanf(str.c_str(),"%Lf%c%Lf",&x,p,&y);
 			PTemp.x = x;
 			PTemp.y = y;
+					
 			
 			str.erase(0,str.find(")")+2);
 			
@@ -97,8 +98,14 @@ void Parse()
 					STemp.Ty = y;					
 				}
 				
-
-				PTemp.vS.push_back(STemp);
+				
+				
+				if(STemp.Ty < PTemp.y)
+				{				
+					STemp.x = PTemp.x;
+					STemp.y = PTemp.y;
+					PTemp.vS.push_back(STemp);
+				}
 				vPTemp.push_back(PTemp);			
 								
 				PTemp = vPTemp[vPTemp.size() - 1];
@@ -110,7 +117,12 @@ void Parse()
 					STemp.iCase = 3;
 				else if(STemp.iCase == 3)
 					STemp.iCase = 2;
-				PTemp.vS.push_back(STemp);
+				if(STemp.Ty < PTemp.y)
+				{				
+					STemp.x = PTemp.x;
+					STemp.y = PTemp.y;
+					PTemp.vS.push_back(STemp);
+				}
 				
 				str.erase(0,str.find(")")+2);
 				iTemp = str.find(" ");	
@@ -156,7 +168,14 @@ void Parse()
 	sort(vY.begin(),vY.end(),MySort1);
 	for(int i = 0 ; i < vY.size() ; i++) 
 	{
+		FindLinearEquation(vY[i]);
 		cout<<vY[i].x<<"	"<<vY[i].y<<endl;
+		for(int j = 0 ; j < vY[i].vS.size() ; j++)
+			{
+				cout<<vY[i].vS[j].Tx<<"	"<<vY[i].vS[j].Ty<<"	"<<endl<<vY[i].vS[j].a<<"	"<<vY[i].vS[j].b<<"	";
+			}
+		cout<<endl;
+		cout<<endl;
 	}
 }
 
