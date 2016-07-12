@@ -2,13 +2,13 @@
 Order=0,1,2,3
 Focused=0
 [Editor_0]
-CursorCol=25
-CursorRow=205
-TopLine=176
+CursorCol=16
+CursorRow=203
+TopLine=180
 LeftChar=1
 [Editor_1]
 CursorCol=13
-CursorRow=3
+CursorRow=2
 TopLine=1
 LeftChar=1
 [Editor_2]

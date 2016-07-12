@@ -31,4 +31,4 @@ struct X
 {	
 	long double x;
 	long double y;
-};
+}; 	 
