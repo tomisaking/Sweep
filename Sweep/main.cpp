@@ -226,23 +226,24 @@ int main(int argc, char** argv)
 				
 				if(y < vX[i].y && y < vX[i + 1].y && y >= vX[i].Ty && y >= vX[i + 1].Ty)
 				{
-					long double x = vX[i].a * y + vX[i].b;
-					Point PTemp;
+					long double x = vX[i].a * y + vX[i].b;					
 					Segment STemp;
-					
-					PTemp.x = x; PTemp.y = y;
+									
 					STemp.x = x; STemp.y = y;
 					
-					STemp.Tx = vX[i].Tx; STemp.Ty = vX[i].Ty;
-					STemp.a = vX[i].a; STemp.b = vX[i].b; 
-					if(vX[i].Ty != y)			
-						vX.push_back(STemp);
+					//STemp.Tx = vX[i].Tx; STemp.Ty = vX[i].Ty;
+					//STemp.a = vX[i].a; STemp.b = vX[i].b; 
+					//if(vX[i].Ty != y)			
+					//	vX.push_back(STemp);
 					
 					
-					STemp.Tx = vX[i + 1].Tx; STemp.Ty = vX[i + 1].Ty;
-					STemp.a = vX[i + 1].a; STemp.b = vX[i + 1].b; 
-					if(vX[i + 1].Ty != y)
-						vX.push_back(STemp);								
+					//STemp.Tx = vX[i + 1].Tx; STemp.Ty = vX[i + 1].Ty;
+					//STemp.a = vX[i + 1].a; STemp.b = vX[i + 1].b; 
+					//if(vX[i + 1].Ty != y)
+					//	vX.push_back(STemp);								
+					
+					vX[i].x = x ; vX[i].y = y;
+					vX[i + 1].x = x ; vX[i + 1].y = y;
 						
 					viTemp.push_back(i);
 					//vX.erase(vX.begin() + i , vX.begin() + i + 2);			
@@ -254,10 +255,13 @@ int main(int argc, char** argv)
 			}
 		}		
 		//§ä¥æÂI
-		for(int i = viTemp.size() -1 ; i >= 0 ; i-- )
+		
+		//
+	/*	for(int i = viTemp.size() -1 ; i >= 0 ; i-- )
 		{			
 			vX.erase(vX.begin() + viTemp[i], vX.begin() + viTemp[i] + 2);
-		}
+		}*/
+		
 		 
 	/*	for(int i = 0 ; i < vX.size() ; i++)
 		{
