@@ -1,6 +1,7 @@
 #include <vector>
 
 using namespace std;
+
 struct Segment
 {
 	int iCase;		// 1:Line  2:CW  3:CCW
