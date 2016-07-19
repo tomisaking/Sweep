@@ -16,6 +16,11 @@ bool MySort2 (Segment lhs, Segment rhs)
 	return lhs.x < rhs.x ; 
 }
 
+bool MySort3 (Segment lhs, Segment rhs)
+{
+	return lhs.iNumber > rhs.iNumber ; 
+}
+
 
 bool bCross (Point L,Point R)
 {
