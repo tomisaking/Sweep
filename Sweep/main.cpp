@@ -18,7 +18,9 @@ using namespace std;
 void Parse();
 vector <Point> vY;			
 vector <Segment> vX;		
-
+vector <long double> vDarkXNext;
+long double yyNext = -1;
+string s = "test.gbr.ctu3";
 ////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -26,8 +28,8 @@ vector <Segment> vX;
 void Parse()
 {
 	fstream fin;
-	char temp[256]="test.gbr.ctu3";
-	fin.open(temp,ios::in);
+	//char temp[256]="test.gbr.ctu3";
+	fin.open(s.c_str(),ios::in);
 	char line[25600];
 	int iNowLine = 1;
 	fin.getline(line,sizeof(line),'\n');
@@ -138,19 +140,6 @@ void Parse()
 					{
 						vY.push_back(vPTemp[i]);
 					}
-				/*	for(int i = 0 ; i < vPTemp.size() ; i++)
-					{
-						cout<<vPTemp[i].x<<"	"<<vPTemp[i].y<<"	";
-						cout<<endl;
-						for(int j = 0 ; j < vPTemp[i].vS.size() ; j++)
-						{
-							cout<<vPTemp[i].vS[j].Tx<<"	"<<vPTemp[i].vS[j].Ty<<"	";
-						}
-						cout<<endl;
-						cout<<endl;
-
-					}
-					cout<<"////////////////////////////////////"<<endl;*/
 				}
 			}				
 		}
@@ -160,23 +149,14 @@ void Parse()
 
 int main(int argc, char** argv) 
 {
-	
+	if(argc > 1)
+		s = argv[1];
 	cout.setf( std::ios::fixed, std:: ios::floatfield );
 	cout.precision(10);
 	cout<<"for Viewer"<<endl;
 	Parse();  
-	//InitialY(vY);
 	
-	/*for(int i = 0 ; i < vY.size() ; i++) 
-	{
-		cout<<vY[i].x<<"	"<<vY[i].y<<endl;
-		for(int j = 0 ; j < vY[i].vS.size() ; j++)
-		{
-			cout<<vY[i].vS[j].Tx<<"	"<<vY[i].vS[j].Ty<<"	"<<endl<<vY[i].vS[j].a<<"	"<<vY[i].vS[j].b<<"	";
-		}
-		cout<<endl;
-		cout<<endl;
-	}*/
+	
 	
 	while(vY.size() > 0)
 	{
@@ -218,13 +198,9 @@ int main(int argc, char** argv)
 
 		
 //////////輸出//////////
-		//long double TopofEndofY = 0;	//所有segments終點中最高的值
 		vector <Segment> Test2;  //目前 (event y座標) 以上的所有segment集合
-		
 		for(int i = vX.size() - 1 ; i >= 0 ; i-- )
 		{
-			//TopofEndofY = max(TopofEndofY,vX[i].Ty);
-
 			if(dTop != vX[i].y)
 			{							
 				Segment STemp;
@@ -247,9 +223,16 @@ int main(int argc, char** argv)
 		vector <Segment> Test;	//目前 (event y座標) 以上的所有segment集合 (要由左往右一個一個檢查)
 
 		int iColor = 0;
+		vector <long double> vDarkXPre;
+		vector <long double> vDarkXNow;
+		vDarkXPre.assign(vDarkXNext.begin(), vDarkXNext.end()); 
+		vDarkXNext.clear();
+
+		long double yyPre = yyNext;
+		long double yyNow = 0;
 		for(int i = 0 ; i < Test2.size() ; i++ )
 		{		
-			bool b = 0;
+			bool b = 0;									//此segment出現過了沒？
 			for(int j = 0 ; j < Test.size() ; j++ )		//如果在集合中發現相同編號的segment 則移除
 			{
 				if(Test[j].iNumber == Test2[i].iNumber)
@@ -276,10 +259,53 @@ int main(int argc, char** argv)
 				iColor = iColor2;
 				cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),line,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
 				//cout<<Test2[i].x<<"	"<<Test2[i].y<<"	"<<Test2[i].Tx<<"	"<<Test2[i].Ty<<endl;
+				yyNext = Test2[i].Ty;
+				yyNow = Test2[i].y;
+				vDarkXNext.push_back(Test2[i].Tx);				
+				vDarkXNow.push_back(Test2[i].x);				
 			}			
 		}
-		//cout<<endl;
+
+		////處理水平線////
+		if(yyPre == yyNow && vY.size() > 0)
+		{
+			for(int i = 0 ; i < vDarkXPre.size() ; i++)
+			{
+				vDarkXNow.push_back(vDarkXPre[i]);
+			}
+			sort(vDarkXNow.begin(),vDarkXNow.end());
+
+			for(int k = 0 ; k < vDarkXNow.size() ; k = k + 2)
+			{
+				if(vDarkXNow[k] != vDarkXNow[k + 1])
+					cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
+			}
+		}
+		else if (yyPre != yyNow)
+		{
+			for(int k = 0 ; k < vDarkXPre.size() ; k = k + 2)
+			{
+				cout<<"Draw 9 dark {("<<vDarkXPre[k]<<","<<yyPre<<"),line,("<<vDarkXPre[k + 1]<<","<<yyPre<<")} [1]"<<endl;
+			}
+			for(int k = 0 ; k < vDarkXNow.size() ; k = k + 2)
+			{
+				cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
+			}
+		}
+		else if (vY.size() == 0)
+		{
+			for(int k = 0 ; k < vDarkXPre.size() ; k = k + 2)
+			{
+				cout<<"Draw 9 dark {("<<vDarkXPre[k]<<","<<yyNext<<"),line,("<<vDarkXPre[k + 1]<<","<<yyNext<<")} [1]"<<endl;
+			}
+		}
+		//	cout<<endl;
+		////處理水平線////
+
 //////////輸出//////////		
+
+
+
 
 
 ////////找交點////////
@@ -297,44 +323,20 @@ int main(int argc, char** argv)
 				
 				if(y < vX[i].y && y < vX[i + 1].y && y >= vX[i].Ty && y >= vX[i + 1].Ty)
 				{
+					
 					long double x = vX[i].a * y + vX[i].b;	
 					Point PTemp;
 					PTemp.x = x; PTemp.y = y;
-					vY.push_back(PTemp);
+
+					vY.push_back(PTemp);	//若有交點則新增回vY
 					//cout<<x<<"	"<<y<<endl;
-				}
-				/*if((y < vX[i].y) && (y < vX[i + 1].y) && (y >= vX[i].Ty) && (y >= vX[i + 1].Ty) && (y >= TopofEndofY))
-				{
-					long double x = vX[i].a * y + vX[i].b;					
-													
-					
-					vX[i].x = x ; vX[i].y = y;
-					vX[i + 1].x = x ; vX[i + 1].y = y;
-					
-					
-					cout<<x<<"	"<<vX[i].y<<"	"<<TopofEndofY<<endl;
-					if(vX.size() == 0)
-						break;
-				}*/
+				}				
 			}
 		}				
 ////////找交點////////		
 					
-		/*sort(vX.begin(),vX.end(),MySort2);
-		for(int i = 0 ; i < vX.size() ; i++) 	
-		{
-			cout<<vX[i].x<<"	"<<vX[i].y<<"	"<<vX[i].Tx<<"	"<<vX[i].Ty<<endl;
-		}
-		cout<<endl;		*/
-		//cout<<vY.size()<<endl;
-		//vX.clear();
+		
 	}
-	
-	
-	
-	
-	//b.vS[0].iCase = 3;
-	//cout<<b.vS[0].iCase;
 	system("pause");
 	return 0;
 }
