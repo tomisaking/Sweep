@@ -426,8 +426,101 @@ int main(int argc, char** argv)
 
 					}
 				}
+			}
+			else if (vX[i].r == 0 && vX[i+1].r != 0 )  // i = 弧線  , i+1 = 弧線    (Not sure)
+			{
+				long double m, k;
+				long double e, f, g, D;
+				long double ans1_x, ans1_y, ans2_x, ans2_y;
+				if (vX[i].Rx != vX[i+1].Rx )
+				{
+					m = ( vX[i].Ry - vX[i+1].Ry ) / ( vX[i+1].Rx - vX[i].Rx );
+					k = ( pow(vX[i].r, 2) - pow(vX[i+1].r, 2) - pow(vX[i].Rx, 2) + pow(vX[i+1].Rx, 2) - pow(vX[i].Ry, 2) + pow(vX[i+1].Ry, 2) ) / (2 * (vX[i+1].Rx - vX[i].Rx ) );
+					e = 1 + m*m;
+					f = 2 * ( k*m - vX[i+1].Rx*m - vX[i+1].Ry);
+					g = k*k - 2*vX[i+1].Rx*k + vX[i+1].Rx*vX[i+1].Rx + vX[i+1].Ry*vX[i+1].Ry - vX[i+1].r* vX[i+1].r;
+					D = f*f - 4*e*g;
+					if (D>0)
+					{
+						ans1_y = (-1*f + sqrt(D)) / (2*e);
+						ans2_y = (-1*f - sqrt(D)) / (2*e);
+						ans1_x = m * ans1_y + k;
+						ans2_x = m * ans2_y + k;
+						if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < vX[i].x && ans1_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < vX[i+1].x && ans1_x >= vX[i+1].Tx)
+						{
+							Point PTemp;
+							PTemp.x = ans1_x;
+							PTemp.y = ans1_y;
+							vY.push_back(PTemp);
+							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						}
+						else if (ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_x < vX[i].x && ans2_x >= vX[i].Tx && ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_x < vX[i+1].x && ans2_x >= vX[i+1].Tx)
+						{
+							Point PTemp;
+							PTemp.x = ans2_x;
+							PTemp.y = ans2_y;
+							vY.push_back(PTemp);
+							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						}
+					}
+					else if (D==0)
+					{
+						ans1_y = (-1*f) / (2*e);
+						ans1_x = m * ans1_y + k;
+						if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < vX[i].x && ans1_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < vX[i+1].x && ans1_x >= vX[i+1].Tx)
+						{
+							Point PTemp;
+							PTemp.x = ans1_x;
+							PTemp.y = ans1_y;
+							vY.push_back(PTemp);
+							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						}
+					}
+				}
+				else if (vX[i].Rx == vX[i+1].Rx )
+				{
+					long double ans1_y, ans1_x, ans2_x;
+					long double e, f, g, D;
+					ans1_y = ( pow(vX[i].r, 2) - pow(vX[i+1].r, 2) - pow(vX[i].Ry, 2) + pow(vX[i+1].Ry, 2) ) / 2*(vX[i+1].Ry - vX[i].Ry);
+					e = 1;
+					f = -2*vX[i].Rx;
+					g = pow(vX[i].Rx, 2) + pow(ans1_y, 2) - 2*vX[i].Ry*ans1_y + pow(vX[i].Ry, 2) - pow(vX[i].r, 2);
+					D = f*f - 4*e*g;
+					if (D>0)
+					{
+						ans1_x = (-1*f + sqrt(D)) / (2*e);
+						ans2_x = (-1*f - sqrt(D)) / (2*e);
+						if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < vX[i].x && ans1_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < vX[i+1].x && ans1_x >= vX[i+1].Tx)
+						{
+							Point PTemp;
+							PTemp.x = ans1_x;
+							PTemp.y = ans1_y;
+							vY.push_back(PTemp);
+							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						}
+						else if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans2_x < vX[i].x && ans2_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans2_x < vX[i+1].x && ans2_x >= vX[i+1].Tx)
+						{
+							Point PTemp;
+							PTemp.x = ans2_x;
+							PTemp.y = ans1_y;
+							vY.push_back(PTemp);
+							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						}
+					}
+					else if (D==0)
+					{
+						ans1_x = (-1*f) / (2*e);
+						if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < vX[i].x && ans1_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < vX[i+1].x && ans1_x >= vX[i+1].Tx)
+						{
+							Point PTemp;
+							PTemp.x = ans1_x;
+							PTemp.y = ans1_y;
+							vY.push_back(PTemp);
+							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						}
+					}
 
-
+				}
 			}
 		}				
 ////////找交點////////		
