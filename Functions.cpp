@@ -6,15 +6,15 @@ bool MySort1 (Point lhs, Point rhs)
 { 	
 	//return lhs.dScore > rhs.dScore ; 
 	if(lhs.y == rhs.y)
-		return lhs.x < rhs.x;
-	return lhs.y > rhs.y ; 
+		return lhs.x > rhs.x;
+	return lhs.y < rhs.y ; 
 }
 bool MySort2 (Segment lhs, Segment rhs)
 { 	
 	//return lhs.dScore > rhs.dScore ; 
 	//左右 都是弧線
-	if (lhs.iCase != 1 && rhs.iCase != 1)
-	{
+	if (fabs(lhs.x - rhs.x) < ROUND && lhs.iCase != 1 && rhs.iCase != 1)
+	{ 
 		long double r_a, r_b, r_c, r_m;
 		long double l_a, l_b, l_c, l_m;
 		r_a = rhs.x - rhs.Rx;
@@ -45,7 +45,7 @@ bool MySort2 (Segment lhs, Segment rhs)
 
 
 	//左邊是直線  右邊是弧線 (Perfect)
-	if(lhs.x == rhs.x && lhs.iCase == 1 && rhs.iCase != 1)  
+	if(fabs(lhs.x - rhs.x) < ROUND && lhs.iCase == 1 && rhs.iCase != 1)  
 	{
 		// ax + by = c
 		long double a, b, c, m;
@@ -60,7 +60,7 @@ bool MySort2 (Segment lhs, Segment rhs)
 			{
 				return lhs.Tx < rhs.Tx ; 
 			}
-			return lhs.a > rhs.a;//rhs.Tx ; 
+			return lhs.a > rhs.a;//rhs.Tx ;			
 		}
 		else
 		{
@@ -72,7 +72,35 @@ bool MySort2 (Segment lhs, Segment rhs)
 
 
 	}
-	if(lhs.x == rhs.x && lhs.iCase == 1 && rhs.iCase == 1)
+
+	//左邊是弧線  右邊是直線 (Not sure)					
+	if (fabs(lhs.x - rhs.x) < ROUND && lhs.iCase != 1 && rhs.iCase==1)
+	{
+		long double a, b, c, m;
+		a = lhs.x - lhs.Rx;
+		b = lhs.y - lhs.Ry;
+		c = (lhs.r * lhs.r) + (a * lhs.Rx) + (b * lhs.Ry);
+		if ( a != 0)
+		{
+			m = (-1 * b) / a;
+			lhs.a = m;
+			if(rhs.a == m)
+			{
+				return rhs.Tx < lhs.Tx ; 
+			}
+			//return rhs.a < lhs.a;//rhs.Tx ;					//(?)
+			return lhs.a > rhs.a;
+		}
+		else
+		{
+			if(lhs.Tx < lhs.x)
+				return 0;
+			else if (lhs.Tx > lhs.x)
+				return 1;
+		}
+	}
+
+	if(fabs(lhs.x - rhs.x) < ROUND && lhs.iCase == 1 && rhs.iCase == 1)
 		return lhs.a > rhs.a;
 	return lhs.x < rhs.x ; 
 }
@@ -86,11 +114,11 @@ bool MySort3 (Segment lhs, Segment rhs)
 bool bCross (Point L,Point R)
 {
 	bool r = 0;
-	
-	
-	
-	
-	
+
+
+
+
+
 	return r;
 }
 
@@ -100,22 +128,29 @@ void FindLinearEquation(Point &p)
 	{
 		switch(p.vS[i].iCase)
 		{
-			case 1:
-				{
-					p.vS[i].a = (p.vS[i].x - p.vS[i].Tx) / (p.vS[i].y - p.vS[i].Ty);
-					p.vS[i].b = p.vS[i].x - p.vS[i].a * p.vS[i].y;
-					p.vS[i].r = 0;
-				}
-				break;
-			case 3:
-				{
+		case 1:
+			{
+				p.vS[i].a = (p.vS[i].x - p.vS[i].Tx) / (p.vS[i].y - p.vS[i].Ty);
+				p.vS[i].b = p.vS[i].x - p.vS[i].a * p.vS[i].y;
+				p.vS[i].r = 0;
+			}
+			break;
+		case 2:
+			{
+				p.vS[i].r = sqrt ((p.vS[i].x-p.vS[i].Rx)*(p.vS[i].x-p.vS[i].Rx)+(p.vS[i].y-p.vS[i].Ry)*(p.vS[i].y-p.vS[i].Ry));
+				p.vS[i].a = 0;
+				p.vS[i].b = 0;
+			}
+			break;
+		case 3:
+			{
 
-					p.vS[i].r = sqrt ((p.vS[i].x-p.vS[i].Rx)*(p.vS[i].x-p.vS[i].Rx)+(p.vS[i].y-p.vS[i].Ry)*(p.vS[i].y-p.vS[i].Ry));
-					p.vS[i].a = 0;
-					p.vS[i].b = 0;
+				p.vS[i].r = sqrt ((p.vS[i].x-p.vS[i].Rx)*(p.vS[i].x-p.vS[i].Rx)+(p.vS[i].y-p.vS[i].Ry)*(p.vS[i].y-p.vS[i].Ry));
+				p.vS[i].a = 0;
+				p.vS[i].b = 0;
 
-				}
-				break;	
+			}
+			break;	
 		}
 	}	
 }

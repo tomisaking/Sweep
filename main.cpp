@@ -11,16 +11,25 @@
 #include <algorithm>
 #include <cmath>
 #include "Functions.h"
-
+#include <time.h>
+//0.00000001
 using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////////
 void Parse();
 vector <Point> vY;			
 vector <Segment> vX;		
+vector <Segment> vXPre;
 vector <long double> vDarkXNext;
 long double yyNext = -1;
-string s = "arc_test.ctu3";
+string s = "EPC16U88.TOP.ctu3";
+bool bOnce = 0;
+long int iTP = 0;
+//TOM edit
+vector <Point> buffer;
+vector <int> to_insert;
+vector <long int> vYT;
+
 ////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -34,8 +43,7 @@ void Parse()
 	int iNowLine = 1;
 	fin.getline(line,sizeof(line),'\n');
 	while(fin.getline(line,sizeof(line),'\n'))
-	{
-		iNowLine++;
+	{		iNowLine++;
 		if(iNowLine > 1)
 		{
 			string str = line;
@@ -149,20 +157,46 @@ void Parse()
 
 int main(int argc, char** argv) 
 {
+	clock_t t;
+	t = clock();
+
 	if(argc > 1)
 		s = argv[1];
+
+	fstream  ofile;
+	if(argc > 1)
+	{
+		string s2 = s;
+		s2.erase(s.rfind("."));
+		s2 += ".nod2";
+		//printf("%s\n",s2);
+		//system("pause");
+		//string sFile = argv[2];
+		ofile.open(s2.c_str(),ios::out);
+	
+	}
+
+
+	
+	
 	cout.setf( std::ios::fixed, std:: ios::floatfield );
 	cout.precision(10);
-	cout<<"for Viewer"<<endl;
+	ofile.setf( std::ios::fixed, std:: ios::floatfield );
+	ofile.precision(10);
+	ofile<<"                                           "<<endl;
+	//cout<<"for Viewer"<<endl;
 	Parse();  
-	
-	
+
+	InitialY(vY);
+
 	
 	while(vY.size() > 0)
 	{
-		InitialY(vY);
-		long double dTop = vY[0].y;
-		int iTemp = 0;
+		//InitialY(vY);     //Sorting
+		long double dTop = vY[vY.size() - 1].y;
+		//printf("%f\n",dTop);
+		//cout<<dTop<<"	"<<vX.size()<<endl;
+		int iTemp = vY.size() - 1;
 //////////把相同y軸的所有點  加到vX //////////
 		for(;;)
 		{		
@@ -173,7 +207,7 @@ int main(int argc, char** argv)
 			}
 			if(vY[iTemp].y != dTop)
 			{		
-				vY.erase(vY.begin(),vY.begin()+iTemp);
+				vY.erase(vY.begin() + iTemp + 1,vY.end());
 				break;
 			}
 			else if(vY[iTemp].y == dTop)
@@ -189,7 +223,7 @@ int main(int argc, char** argv)
 				for(int i = 0 ; i < vY[iTemp].vS.size() ; i++)
 					vX.push_back(vY[iTemp].vS[i]);
 			}
-			iTemp++;
+			iTemp--;
 		}
 //////////把相同y軸的所有點  加到vX //////////
 		 
@@ -198,28 +232,69 @@ int main(int argc, char** argv)
 
 		
 //////////輸出//////////
-		vector <Segment> Test2;  //目前 (event y座標) 以上的所有segment集合
+		vector <Segment> Test2;  //目前 (event y座標) 以上的所有segment集合 (要拿來輸出的)
 		for(int i = vX.size() - 1 ; i >= 0 ; i-- )
 		{
 			if(dTop != vX[i].y)
-			{							
-				Segment STemp;
-				STemp = vX[i];
-				STemp.Ty = dTop;
-				STemp.Tx = vX[i].a * dTop + vX[i].b;
-				
+			{			
+				if(vX[i].iCase == 1)
+				{
+					Segment STemp;
+					STemp = vX[i];
+					STemp.Ty = dTop;
+					STemp.Tx = vX[i].a * dTop + vX[i].b;	
+					
 
-				Test2.push_back(STemp);
-				
-				vX[i].y = dTop;
-				vX[i].x = vX[i].a * vX[i].y + vX[i].b;	
-				
-				if(dTop <= vX[i].Ty)
-					vX.erase(vX.begin() + i);	//若到達終點 則把此segment從vX中移除
+					Test2.push_back(STemp);
+					
+
+					if(dTop <= vX[i].Ty)
+						vX.erase(vX.begin() + i);	//若到達終點 則把此segment從vX中移除
+					else
+					{
+						vX[i].y = dTop;
+						vX[i].x = STemp.Tx;	
+					}
+				}
+				else	//如果是弧線
+				{
+					Segment STemp;
+					STemp = vX[i];
+					STemp.Ty = dTop;
+					
+
+					long double c,r = vX[i].r;
+					/*r = (vX[i].x - vX[i].Rx) * (vX[i].x - vX[i].Rx) + (vX[i].y - vX[i].Ry) * (vX[i].y - vX[i].Ry);
+					r = sqrt(r);*/
+					c = (r * r) - ( (dTop - vX[i].Ry) * (dTop - vX[i].Ry) );		// X - Rx = +- sqrt(c)
+					c = fabs(c);
+					c = sqrt(c);
+
+					if(vX[i].iCase == 2)
+						STemp.Tx = vX[i].Rx + c;	
+					else
+						STemp.Tx = vX[i].Rx - c;
+
+
+					
+					Test2.push_back(STemp);
+
+
+					if(dTop <= vX[i].Ty)
+						vX.erase(vX.begin() + i);	//若到達終點 則把此segment從vX中移除
+					else
+					{
+						vX[i].y = dTop;
+						vX[i].x = STemp.Tx;	
+					}
+				}
 			}
 		}
 
+		int iPrev = _CrtSetReportMode(_CRT_ASSERT,0);
 		sort(Test2.begin(),Test2.end(),MySort2);
+		_CrtSetReportMode(_CRT_ASSERT,iPrev);
+
 		vector <Segment> Test;	//目前 (event y座標) 以上的所有segment集合 (要由左往右一個一個檢查)
 
 		int iColor = 0;
@@ -230,6 +305,8 @@ int main(int argc, char** argv)
 
 		long double yyPre = yyNext;
 		long double yyNow = 0;
+		bool bTemp = 0;
+		Segment STemp;
 		for(int i = 0 ; i < Test2.size() ; i++ )
 		{		
 			bool b = 0;									//此segment出現過了沒？
@@ -254,20 +331,76 @@ int main(int argc, char** argv)
 				iColor2 = Test[0].iColor;		//選取最上層的顏色
 				
 			
+			yyNext = Test2[i].Ty;
+			yyNow = Test2[i].y;
+
 			if(iColor != iColor2)			//若顏色不相同 則要輸出
 			{
+				
 				iColor = iColor2;
-				//cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),line,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
+				
+				
+				/*if(Test2[i].iCase == 1)
+				{
+					cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),line,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
+				}
+				else if (Test2[i].iCase == 2)
+				{
+					if(fabs(Test2[i].x - Test2[i].Tx) > ROUND)
+						cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),arc,("<<Test2[i].Rx<<","<<Test2[i].Ry<<"),CW,0.123,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
+				}
+				else if (Test2[i].iCase == 3)
+				{
+					if(fabs(Test2[i].x - Test2[i].Tx) > ROUND)
+						cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),arc,("<<Test2[i].Rx<<","<<Test2[i].Ry<<"),CCW,0.123,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
+				}*/
+
+
 				//cout<<Test2[i].x<<"	"<<Test2[i].y<<"	"<<Test2[i].Tx<<"	"<<Test2[i].Ty<<endl;
-				yyNext = Test2[i].Ty;
-				yyNow = Test2[i].y;
+
+				if(!bTemp)
+				{
+					STemp = Test2[i];
+				}
+				else
+				{
+					iTP++;
+					ofile<<"4 "<<endl;
+
+					if(Test2[i].iCase == 1)
+						ofile<<(iTP - 1) * 4<<" 0 "<<Test2[i].x<<" "<<Test2[i].y<<endl;
+					else if(Test2[i].iCase == 2)
+						ofile<<(iTP - 1) * 4<<" 8 "<<Test2[i].x<<" "<<Test2[i].y<<" "<<Test2[i].Rx<<" "<<Test2[i].Ry<<" "<<Test2[i].r<<endl;
+					else if(Test2[i].iCase == 3)
+						ofile<<(iTP - 1) * 4<<" 9 "<<Test2[i].x<<" "<<Test2[i].y<<" "<<Test2[i].Rx<<" "<<Test2[i].Ry<<" "<<Test2[i].r<<endl;
+
+					ofile<<(iTP - 1) * 4 + 1<<" 0 "<<Test2[i].Tx<<" "<<Test2[i].Ty<<endl;
+
+					if(STemp.iCase == 1)
+						ofile<<(iTP - 1) * 4 + 2<<" 0 "<<STemp.Tx<<" "<<STemp.Ty<<endl;
+					else if(STemp.iCase == 2)
+						ofile<<(iTP - 1) * 4 + 2<<" 8 "<<STemp.Tx<<" "<<STemp.Ty<<" "<<STemp.Rx<<" "<<STemp.Ry<<" "<<STemp.r<<endl;
+					else if(STemp.iCase == 3)
+						ofile<<(iTP - 1) * 4 + 2<<" 9 "<<STemp.Tx<<" "<<STemp.Ty<<" "<<STemp.Rx<<" "<<STemp.Ry<<" "<<STemp.r<<endl;
+
+					ofile<<(iTP - 1) * 4 + 3<<" 0 "<<STemp.x<<" "<<STemp.y<<endl;
+
+
+					ofile<<(iTP - 1) * 4 + 3<<" "<<(iTP - 1) * 4<<endl<<(iTP - 1) * 4 + 2<<" "<<(iTP - 1) * 4 + 1<<endl;
+					ofile<<endl;
+				}
+			
+
+				
 				vDarkXNext.push_back(Test2[i].Tx);				
 				vDarkXNow.push_back(Test2[i].x);				
+
+				bTemp = !bTemp;
 			}			
 		}
-
+		vYT.push_back(iTP - 1);
 		////處理水平線////
-		if(yyPre == yyNow && vY.size() > 0)
+		/*if(yyPre == yyNow)
 		{
 			for(int i = 0 ; i < vDarkXPre.size() ; i++)
 			{
@@ -278,29 +411,28 @@ int main(int argc, char** argv)
 			for(int k = 0 ; k < vDarkXNow.size() ; k = k + 2)
 			{
 				if(vDarkXNow[k] != vDarkXNow[k + 1])
-				{
-					//cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
-				}
+					cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
 			}
 		}
 		else if (yyPre != yyNow)
 		{
 			for(int k = 0 ; k < vDarkXPre.size() ; k = k + 2)
 			{
-				//cout<<"Draw 9 dark {("<<vDarkXPre[k]<<","<<yyPre<<"),line,("<<vDarkXPre[k + 1]<<","<<yyPre<<")} [1]"<<endl;
+				cout<<"Draw 9 dark {("<<vDarkXPre[k]<<","<<yyPre<<"),line,("<<vDarkXPre[k + 1]<<","<<yyPre<<")} [1]"<<endl;
 			}
 			for(int k = 0 ; k < vDarkXNow.size() ; k = k + 2)
 			{
-				//cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
+				cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
 			}
 		}
-		else if (vY.size() == 0)
+		if(vY.size() == 0 && !bOnce)
 		{
-			for(int k = 0 ; k < vDarkXPre.size() ; k = k + 2)
+			bOnce = 1;
+			for(int k = 0 ; k < vDarkXNext.size() ; k = k + 2)
 			{
-				//cout<<"Draw 9 dark {("<<vDarkXPre[k]<<","<<yyNext<<"),line,("<<vDarkXPre[k + 1]<<","<<yyNext<<")} [1]"<<endl;
+				cout<<"Draw 9 dark {("<<vDarkXNext[k]<<","<<yyNext<<"),line,("<<vDarkXNext[k + 1]<<","<<yyNext<<")} [1]"<<endl;
 			}
-		}
+		}*/
 		//	cout<<endl;
 		////處理水平線////
 
@@ -311,12 +443,15 @@ int main(int argc, char** argv)
 
 
 ////////找交點////////
+		iPrev = _CrtSetReportMode(_CRT_ASSERT,0);
 		sort(vX.begin(),vX.end(),MySort2);
+		_CrtSetReportMode(_CRT_ASSERT,iPrev);
+
 		int a = vX.size();
 		if(vX.size() > 0)
 		for(int i = 0 ; i < a - 1 ; i++ )
 		{		
-			if(vX[i].a != vX[i + 1].a && vX[i].iCase == 1 && vX[i + 1].iCase == 1)	//若斜率不同 
+			if(vX[i].a != vX[i + 1].a && vX[i].iCase == 1 && vX[i + 1].iCase == 1  && vX[i].Tx > vX[i + 1].Tx)	//若斜率不同		//直線
 			{
 				long double Da = vX[i].a - vX[i + 1].a;
 				long double Db = vX[i].b - vX[i + 1].b;	//Da * y + Db = 0 => y = -Db/Da
@@ -325,63 +460,68 @@ int main(int argc, char** argv)
 				
 				if(y < vX[i].y && y < vX[i + 1].y && y >= vX[i].Ty && y >= vX[i + 1].Ty)
 				{
-					
 					long double x = vX[i].a * y + vX[i].b;	
 					Point PTemp;
 					PTemp.x = x; PTemp.y = y;
 
-					vY.push_back(PTemp);	//若有交點則新增回vY
+					buffer.push_back(PTemp);	//若有交點則新增回vY
 					//cout<<x<<"	"<<y<<endl;
 				}				
 			}
-			else if (vX[i].r == 0 && vX[i+1].r != 0 )  // i = 直線  , i+1 = 弧線    (Perfect)
+			else if (vX[i].r == 0 && vX[i+1].r != 0 && vX[i].Tx > vX[i + 1].Tx)  // i = 直線  , i+1 = 弧線    (Perfect)
 			{
-				long double e, f, g, D;
+				long double e, f, g = 0, D;
 				long double ans1_x, ans1_y, ans2_x, ans2_y;
 				e = vX[i].a * vX[i].a + 1;     				
 				f = 2*vX[i].b*vX[i].a - 2*vX[i+1].Rx*vX[i].a - 2*vX[i+1].Ry;
-				g = pow(vX[i].b, 2) - 2*vX[i+1].Rx*vX[i].b + pow(vX[i+1].Rx, 2)+ pow(vX[i+1].Ry, 2) - vX[i+1].r*vX[i+1].r;
+				g = pow(vX[i].b, 2) - 2*vX[i+1].Rx*vX[i].b + pow(vX[i+1].Rx, 2)+ pow(vX[i+1].Ry, 2) - vX[i+1].r*vX[i+1].r;		
 				D = f * f - 4*e*g;
+
+				long double xleft = min(vX[i+1].x,vX[i+1].Tx);
+				long double xright = max(vX[i+1].x,vX[i+1].Tx);
 				if (D > 0)
 				{
 					ans1_y = (-1*f + sqrt(D)) / (2*e);
 					ans2_y = (-1*f - sqrt(D)) / (2*e);
 					ans1_x = vX[i].a * ans1_y + vX[i].b;
 					ans2_x = vX[i].a * ans2_y + vX[i].b;
-					if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < vX[i+1].x && ans1_x >= vX[i+1].Tx)
+					
+						
+
+					if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < xright && ans1_x >= xleft )
 					{
 						Point PTemp;
 						PTemp.x = ans1_x;
 						PTemp.y = ans1_y;
-						vY.push_back(PTemp);
-						printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						buffer.push_back(PTemp);
+						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 					}
-					else if (ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_x < vX[i+1].x && ans2_x >= vX[i+1].Tx)
+					else if (ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_x < xright && ans2_x >= xleft)
 					{
 						Point PTemp;
 						PTemp.x = ans2_x;
 						PTemp.y = ans2_y;
-						vY.push_back(PTemp);
-						printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						buffer.push_back(PTemp);
+						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 					}
 				}
 				else if (D == 0)
 				{
 					ans1_y = (-1*f) / (2*e);
 					ans1_x = vX[i].a * ans1_y + vX[i].b;
-					if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < vX[i+1].x && ans1_x >= vX[i+1].Tx)
+					if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < xright && ans1_x >= xleft)
 					{
 						Point PTemp;
 						PTemp.x = ans1_x;
 						PTemp.y = ans1_y;
-						vY.push_back(PTemp);
-						printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						buffer.push_back(PTemp);
+						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 
 					}
 				}
 
 			}
-			else if (vX[i].r != 0 && vX[i+1].r == 0 )  // i = 弧線  , i+1 = 直線   (Not sure)
+			else if (vX[i].r != 0 && vX[i+1].r == 0 && vX[i].Tx > vX[i + 1].Tx)  // i = 弧線  , i+1 = 直線   (Not sure)
 			{
 				long double e, f, g, D;
 				long double ans1_x, ans1_y, ans2_x, ans2_y;
@@ -389,46 +529,52 @@ int main(int argc, char** argv)
 				f = 2*vX[i+1].b*vX[i+1].a - 2*vX[i].Rx*vX[i+1].a - 2*vX[i].Ry;
 				g = pow(vX[i+1].b, 2) - 2*vX[i].Rx*vX[i+1].b + pow(vX[i].Rx, 2)+ pow(vX[i].Ry, 2) - vX[i].r*vX[i].r;
 				D = f * f - 4*e*g;
+
+				long double xleft = min(vX[i].x,vX[i].Tx);		//Why i+1  not i?
+				long double xright = max(vX[i].x,vX[i].Tx);
 				if (D > 0)
 				{
 					ans1_y = (-1*f + sqrt(D)) / (2*e);
 					ans2_y = (-1*f - sqrt(D)) / (2*e);
 					ans1_x = vX[i+1].a * ans1_y + vX[i+1].b;
 					ans2_x = vX[i+1].a * ans2_y + vX[i+1].b;
-					if (ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < vX[i].x && ans1_x >= vX[i].Tx)
+				
+
+					if (ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < xright && ans1_x >= xleft )
 					{
 						Point PTemp;
 						PTemp.x = ans1_x;
 						PTemp.y = ans1_y;
-						vY.push_back(PTemp);
-						printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						buffer.push_back(PTemp);
+						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 					}
-					else if (ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_x < vX[i].x && ans2_x >= vX[i].Tx)
+					else if (ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_x < xright && ans2_x >= xleft)
 					{
 						Point PTemp;
 						PTemp.x = ans2_x;
 						PTemp.y = ans2_y;
-						vY.push_back(PTemp);
-						printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						buffer.push_back(PTemp);
+						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 					}
 				}
 				else if (D == 0)
 				{
 					ans1_y = (-1*f) / (2*e);
 					ans1_x = vX[i+1].a * ans1_y + vX[i+1].b;
-					if (ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < vX[i].x && ans1_x >= vX[i].Tx)
+					if (ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < xright && ans1_x >= xleft)
 					{
 						Point PTemp;
 						PTemp.x = ans1_x;
 						PTemp.y = ans1_y;
-						vY.push_back(PTemp);
-						printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						buffer.push_back(PTemp);
+						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 
 					}
 				}
 			}
-			else if (vX[i].r == 0 && vX[i+1].r != 0 )  // i = 弧線  , i+1 = 弧線    (Not sure)
+			else if (vX[i].r != 0 && vX[i+1].r != 0 && vX[i].Tx > vX[i + 1].Tx)  // i = 弧線  , i+1 = 弧線    (Not sure)
 			{
+				
 				long double m, k;
 				long double e, f, g, D;
 				long double ans1_x, ans1_y, ans2_x, ans2_y;
@@ -442,25 +588,34 @@ int main(int argc, char** argv)
 					D = f*f - 4*e*g;
 					if (D>0)
 					{
+						
 						ans1_y = (-1*f + sqrt(D)) / (2*e);
 						ans2_y = (-1*f - sqrt(D)) / (2*e);
 						ans1_x = m * ans1_y + k;
 						ans2_x = m * ans2_y + k;
-						if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < vX[i].x && ans1_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < vX[i+1].x && ans1_x >= vX[i+1].Tx)
+						//printf ("D:%Lf\n", (-1*f + sqrt(D)) / (2*e));
+						//printf ("ans1_x:%Lf   ans1_y:%Lf\n", ans1_x, ans1_y);
+						//printf ("ans2_x:%Lf   ans2_y:%Lf\n", ans2_x, ans2_y);
+						long double x1_left = min(vX[i].x,vX[i].Tx);
+						long double x1_right = max(vX[i].x,vX[i].Tx);
+						long double x2_left = min(vX[i+1].x,vX[i+1].Tx);
+						long double x2_right = max(vX[i+1].x,vX[i+1].Tx);
+
+						if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans1_x < x1_right && ans1_x >= x1_left && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans1_x < x2_right && ans1_x >= x2_left)
 						{
 							Point PTemp;
 							PTemp.x = ans1_x;
 							PTemp.y = ans1_y;
-							vY.push_back(PTemp);
-							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							buffer.push_back(PTemp);
+							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 						}
-						else if (ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_x < vX[i].x && ans2_x >= vX[i].Tx && ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_x < vX[i+1].x && ans2_x >= vX[i+1].Tx)
+						else if (ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_x < x1_right && ans2_x >= x1_left && ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_x < x2_right && ans2_x >= x2_left)
 						{
 							Point PTemp;
 							PTemp.x = ans2_x;
 							PTemp.y = ans2_y;
-							vY.push_back(PTemp);
-							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							buffer.push_back(PTemp);
+							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 						}
 					}
 					else if (D==0)
@@ -472,8 +627,8 @@ int main(int argc, char** argv)
 							Point PTemp;
 							PTemp.x = ans1_x;
 							PTemp.y = ans1_y;
-							vY.push_back(PTemp);
-							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							buffer.push_back(PTemp);
+							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 						}
 					}
 				}
@@ -495,16 +650,16 @@ int main(int argc, char** argv)
 							Point PTemp;
 							PTemp.x = ans1_x;
 							PTemp.y = ans1_y;
-							vY.push_back(PTemp);
-							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							buffer.push_back(PTemp);
+							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 						}
 						else if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans2_x < vX[i].x && ans2_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans2_x < vX[i+1].x && ans2_x >= vX[i+1].Tx)
 						{
 							Point PTemp;
 							PTemp.x = ans2_x;
 							PTemp.y = ans1_y;
-							vY.push_back(PTemp);
-							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							buffer.push_back(PTemp);
+							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 						}
 					}
 					else if (D==0)
@@ -515,18 +670,114 @@ int main(int argc, char** argv)
 							Point PTemp;
 							PTemp.x = ans1_x;
 							PTemp.y = ans1_y;
-							vY.push_back(PTemp);
-							printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							buffer.push_back(PTemp);
+							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
 						}
 					}
-
 				}
 			}
-		}				
+		}
+
+		//TOM edit
+		sort(buffer.begin(),buffer.end(),MySort1);
+
+		int index = vY.size() - 1;
+			
+		//printf ("to_insert  size : %d\n", to_insert.size());
+		for (int i = buffer.size() - 1 ; i >= 0; i--){
+			for (int j = index ; j >= 0 ; j--){
+				if (buffer[i].y > vY[j].y )
+				{					
+					index = j;
+					to_insert.push_back(j);
+					break;
+				}
+				else if  (buffer[i].y == vY[j].y )
+				{
+					if (buffer[i].x < vY[j].x )
+					{
+						//insert into vY at j
+						//vY.insert(vY.begin()+j, buffer[i] );
+						index = j;
+						to_insert.push_back(j);
+						break;
+					}
+				}
+			}
+		}
+		//printf ("Buffer  size : %d\n", buffer.size());
+		//printf ("to_insert  size : %d\n", to_insert.size());
+		
+
+		iTemp = 0;
+		if(to_insert.size() > 0)
+		{
+			/*if(to_insert[0] == 775 )
+			{
+				int a; 
+				a=2;
+			}*/
+			for (int i = to_insert.size() - 1; i >= 0 ; i-- )
+			{
+				vY.insert(vY.begin()+to_insert[i] + iTemp +  1, buffer[iTemp]);
+				iTemp++;
+			}
+		}
+		/*vector <Point> vY2;		
+		for(int i = 0 ; i < vY.size() ; i++)
+		{
+			vY2.push_back(vY[i]);
+		}*/
+	
+		/*for (int i = 0; i < buffer.size(); i++){
+			vY.push_back(buffer[i]);
+		}*/
+		//sort(vY.begin(),vY.end(),MySort1);
+
+		/*for(int i = 0 ; i < vY.size() ; i++)
+		{
+			if(vY[i].x != vY2[i].x || vY[i].y != vY2[i].y)
+			{
+				int a; 
+				a = 2 ;
+			}
+		}*/
+
+		buffer.clear();
+		to_insert.clear();
 ////////找交點////////		
 					
 		
 	}
+	
+	ofile<<";YT";
+	int	iTemp = 0;
+	for(int i = 0 ; i < vYT.size() ; i++)
+	{
+		for(iTemp; iTemp <= vYT[i] ; iTemp++)
+		{
+			ofile<<iTemp<<" ";
+		}
+		ofile<<endl;
+	}
+
+	ofile<<endl;
+	ofile<<";YB";
+
+	iTemp = 0;
+	for(int i = 0 ; i < vYT.size() ; i++)
+	{
+		for(iTemp; iTemp <= vYT[i] ; iTemp++)
+		{
+			ofile<<iTemp<<" ";
+		}
+		ofile<<endl;
+	}
+
+	ofile.seekg(0);
+	ofile<<iTP;
+	//system("pause");
+	cout<<endl<<"RunTime : "<<clock()-t<<"ms"<<endl;
 	system("pause");
 	return 0;
 }

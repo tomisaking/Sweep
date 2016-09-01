@@ -16,7 +16,8 @@ struct Segment
 	
 	long double a,b;	// x = ay + b
 	long double D;
-	long double e,f,g;  // ey^2 + fy + g = 0;
+
+	//long double e,f,g;  // ey^2 + fy + g = 0;
 	long double r; // radius
 };
 struct Point

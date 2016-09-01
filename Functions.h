@@ -1,4 +1,5 @@
 #include "Structs.h"
+#define ROUND 0.000001
 
 bool MySort1 (Point lhs, Point rhs);
 bool MySort2 (Segment lhs, Segment rhs);
