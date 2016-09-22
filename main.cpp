@@ -19,17 +19,17 @@ using namespace std;
 void Parse();
 vector <Point> vY;			
 vector <Segment> vX;		
-vector <Segment> vXPre;
-vector <long double> vDarkXNext;
+vector <ForHorizontal> vDarkXNext;
 long double yyNext = -1;
-string s = "EPC16U88.TOP.ctu3";
+string s = "C:\\Users\\S100\\Desktop\\Allen\\Sweep\\EPC16U88.TOP - Ori.ctu3";
 bool bOnce = 0;
 long int iTP = 0;
 //TOM edit
 vector <Point> buffer;
 vector <int> to_insert;
-vector <long int> vYT;
-
+//vector <long int> vYT;
+vector <vector <Segment> > vContour;		
+vector <long int> Link;
 ////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -53,6 +53,7 @@ void Parse()
 			Point PTemp;
 			vector <Point> vPTemp;
 			Segment STemp;
+			STemp.bdirection = 0;
 			
 			iTemp = str.find("dark");			
 			if(iTemp > 0)			
@@ -61,6 +62,7 @@ void Parse()
 				STemp.iColor = 0;
 
 			STemp.iNumber = iNowLine;
+			//STemp.iNumber2 = iNowLine;
 			
 			str.erase(0,str.find("(")+1);
 			sscanf(str.c_str(),"%Lf%c%Lf",&x,p,&y);
@@ -152,6 +154,8 @@ void Parse()
 			}				
 		}
 	}	
+	vContour.resize(iNowLine + 1);
+	Link.resize(iNowLine + 1);
 }
 
 
@@ -164,7 +168,7 @@ int main(int argc, char** argv)
 		s = argv[1];
 
 	fstream  ofile;
-	if(argc > 1)
+	//if(argc > 1)
 	{
 		string s2 = s;
 		s2.erase(s.rfind("."));
@@ -183,7 +187,7 @@ int main(int argc, char** argv)
 	cout.precision(10);
 	ofile.setf( std::ios::fixed, std:: ios::floatfield );
 	ofile.precision(10);
-	ofile<<"                                           "<<endl;
+	//ofile<<"                                           "<<endl;
 	//cout<<"for Viewer"<<endl;
 	Parse();  
 
@@ -298,8 +302,8 @@ int main(int argc, char** argv)
 		vector <Segment> Test;	//目前 (event y座標) 以上的所有segment集合 (要由左往右一個一個檢查)
 
 		int iColor = 0;
-		vector <long double> vDarkXPre;
-		vector <long double> vDarkXNow;
+		vector <ForHorizontal> vDarkXPre;
+		vector <ForHorizontal> vDarkXNow;
 		vDarkXPre.assign(vDarkXNext.begin(), vDarkXNext.end()); 
 		vDarkXNext.clear();
 
@@ -342,17 +346,17 @@ int main(int argc, char** argv)
 				
 				/*if(Test2[i].iCase == 1)
 				{
-					cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),line,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
+					ofile<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),line,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
 				}
 				else if (Test2[i].iCase == 2)
 				{
 					if(fabs(Test2[i].x - Test2[i].Tx) > ROUND)
-						cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),arc,("<<Test2[i].Rx<<","<<Test2[i].Ry<<"),CW,0.123,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
+						ofile<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),arc,("<<Test2[i].Rx<<","<<Test2[i].Ry<<"),CW,0.123,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
 				}
 				else if (Test2[i].iCase == 3)
 				{
 					if(fabs(Test2[i].x - Test2[i].Tx) > ROUND)
-						cout<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),arc,("<<Test2[i].Rx<<","<<Test2[i].Ry<<"),CCW,0.123,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
+						ofile<<"Draw 9 dark {("<<Test2[i].x<<","<<Test2[i].y<<"),arc,("<<Test2[i].Rx<<","<<Test2[i].Ry<<"),CCW,0.123,("<<Test2[i].Tx<<","<<Test2[i].Ty<<")} [1]"<<endl;
 				}*/
 
 
@@ -361,11 +365,24 @@ int main(int argc, char** argv)
 				if(!bTemp)
 				{
 					STemp = Test2[i];
+					swap(STemp.x,STemp.Tx);
+					swap(STemp.y,STemp.Ty);
+
+					STemp.bdirection = 1;
+					if(STemp.iCase == 3)
+						STemp.iCase = 2;
+					else if(STemp.iCase == 2)
+						STemp.iCase = 3;
 				}
 				else
 				{
-					iTP++;
-					ofile<<"4 "<<endl;
+				
+					vContour[STemp.iNumber].push_back(STemp);
+					vContour[Test2[i].iNumber].push_back(Test2[i]);
+				
+
+					//iTP++;
+					/*ofile<<"4 "<<endl;
 
 					if(Test2[i].iCase == 1)
 						ofile<<(iTP - 1) * 4<<" 0 "<<Test2[i].x<<" "<<Test2[i].y<<endl;
@@ -387,42 +404,156 @@ int main(int argc, char** argv)
 
 
 					ofile<<(iTP - 1) * 4 + 3<<" "<<(iTP - 1) * 4<<endl<<(iTP - 1) * 4 + 2<<" "<<(iTP - 1) * 4 + 1<<endl;
-					ofile<<endl;
+					ofile<<endl;*/
 				}
 			
 
-				
-				vDarkXNext.push_back(Test2[i].Tx);				
-				vDarkXNow.push_back(Test2[i].x);				
+				ForHorizontal Temp;
+				Temp.x = Test2[i].Tx;
+				Temp.iNumber = Test2[i].iNumber;
+				vDarkXNext.push_back(Temp);
+
+
+				Temp.x = Test2[i].x;
+				vDarkXNow.push_back(Temp);				
 
 				bTemp = !bTemp;
 			}			
 		}
-		vYT.push_back(iTP - 1);
+		//vYT.push_back(iTP - 1);
 		////處理水平線////
-		/*if(yyPre == yyNow)
+		if(yyPre == yyNow)
 		{
 			for(int i = 0 ; i < vDarkXPre.size() ; i++)
 			{
 				vDarkXNow.push_back(vDarkXPre[i]);
 			}
-			sort(vDarkXNow.begin(),vDarkXNow.end());
+			sort(vDarkXNow.begin(),vDarkXNow.end(),MySort6);
 
 			for(int k = 0 ; k < vDarkXNow.size() ; k = k + 2)
 			{
-				if(vDarkXNow[k] != vDarkXNow[k + 1])
-					cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
+				if(fabs(vDarkXNow[k].x - vDarkXNow[k + 1].x) > ROUND)
+				{
+					//ofile<<"Draw 9 dark {("<<vDarkXNow[k].x<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1].x<<","<<yyNow<<")} [1]"<<endl;
+
+					Segment Temp;
+					Temp.x = vDarkXNow[k].x;		Temp.y = yyNow;
+					Temp.Tx = vDarkXNow[k + 1].x;	Temp.Ty = yyNow;
+					Temp.iCase = 4;
+					vContour[vDarkXNow[k].iNumber].push_back(Temp);
+
+					long int iTemp = 0 ;
+					if(Link[vDarkXNow[k].iNumber] > 0 && Link[vDarkXNow[k + 1].iNumber] > 0)
+					{
+						iTemp = min( min(Link[vDarkXNow[k].iNumber] , Link[vDarkXNow[k + 1].iNumber]) , min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber) );
+					}
+					else if(Link[vDarkXNow[k].iNumber] > 0 && Link[vDarkXNow[k + 1].iNumber] == 0)
+					{
+						iTemp = min(Link[vDarkXNow[k].iNumber] , min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber) );
+					}
+					else if(Link[vDarkXNow[k].iNumber] == 0 && Link[vDarkXNow[k + 1].iNumber] > 0)
+					{
+						iTemp = min(Link[vDarkXNow[k + 1].iNumber] , min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber) );
+					}
+					else
+					{
+						iTemp = min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber);
+					}
+					long int a = Link[vDarkXNow[k].iNumber] , b = Link[vDarkXNow[k + 1].iNumber];
+					for(int i = 0 ; i < Link.size() ; i++)
+					{
+						Link[vDarkXNow[k].iNumber] = iTemp;
+						Link[vDarkXNow[k + 1].iNumber] = iTemp;
+
+						if(Link[i] == a && a > 0)
+							Link[i] = iTemp;
+						else if(Link[i] == b && b > 0)
+							Link[i] = iTemp;
+						
+					}
+			
+				}
 			}
 		}
 		else if (yyPre != yyNow)
 		{
 			for(int k = 0 ; k < vDarkXPre.size() ; k = k + 2)
 			{
-				cout<<"Draw 9 dark {("<<vDarkXPre[k]<<","<<yyPre<<"),line,("<<vDarkXPre[k + 1]<<","<<yyPre<<")} [1]"<<endl;
+				//ofile<<"Draw 9 dark {("<<vDarkXPre[k].x<<","<<yyPre<<"),line,("<<vDarkXPre[k + 1].x<<","<<yyPre<<")} [1]"<<endl;
+				Segment Temp;
+				Temp.x = vDarkXPre[k].x;		Temp.y = yyPre;
+				Temp.Tx = vDarkXPre[k + 1].x;	Temp.Ty = yyPre;
+				Temp.iCase = 4;
+				vContour[vDarkXPre[k].iNumber].push_back(Temp);
+
+				long int iTemp = 0 ;
+				if(Link[vDarkXPre[k].iNumber] > 0 && Link[vDarkXPre[k + 1].iNumber] > 0)
+				{
+					iTemp = min( min(Link[vDarkXPre[k].iNumber] , Link[vDarkXPre[k + 1].iNumber]) , min(vDarkXPre[k].iNumber , vDarkXPre[k + 1].iNumber) );
+				}
+				else if(Link[vDarkXPre[k].iNumber] > 0 && Link[vDarkXPre[k + 1].iNumber] == 0)
+				{
+					iTemp = min(Link[vDarkXPre[k].iNumber] , min(vDarkXPre[k].iNumber , vDarkXPre[k + 1].iNumber) );
+				}
+				else if(Link[vDarkXPre[k].iNumber] == 0 && Link[vDarkXPre[k + 1].iNumber] > 0)
+				{
+					iTemp = min(Link[vDarkXPre[k + 1].iNumber] , min(vDarkXPre[k].iNumber , vDarkXPre[k + 1].iNumber) );
+				}
+				else
+				{
+					iTemp = min(vDarkXPre[k].iNumber , vDarkXPre[k + 1].iNumber);
+				}
+				long int a = Link[vDarkXPre[k].iNumber] , b = Link[vDarkXPre[k + 1].iNumber];
+				for(int i = 0 ; i < Link.size() ; i++)
+				{
+					Link[vDarkXPre[k].iNumber] = iTemp;
+					Link[vDarkXPre[k + 1].iNumber] = iTemp;
+
+					if(Link[i] == a && a > 0)
+						Link[i] = iTemp;
+					else if(Link[i] == b && b > 0)
+						Link[i] = iTemp;
+				}
+
 			}
 			for(int k = 0 ; k < vDarkXNow.size() ; k = k + 2)
 			{
-				cout<<"Draw 9 dark {("<<vDarkXNow[k]<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1]<<","<<yyNow<<")} [1]"<<endl;
+				//ofile<<"Draw 9 dark {("<<vDarkXNow[k].x<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1].x<<","<<yyNow<<")} [1]"<<endl;
+				Segment Temp;
+				Temp.x = vDarkXNow[k].x;		Temp.y = yyNow;
+				Temp.Tx = vDarkXNow[k + 1].x;	Temp.Ty = yyNow;
+				Temp.iCase = 4;
+				vContour[vDarkXNow[k].iNumber].push_back(Temp);
+
+				long int iTemp = 0 ;
+				if(Link[vDarkXNow[k].iNumber] > 0 && Link[vDarkXNow[k + 1].iNumber] > 0)
+				{
+					iTemp = min( min(Link[vDarkXNow[k].iNumber] , Link[vDarkXNow[k + 1].iNumber]) , min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber) );
+				}
+				else if(Link[vDarkXNow[k].iNumber] > 0 && Link[vDarkXNow[k + 1].iNumber] == 0)
+				{
+					iTemp = min(Link[vDarkXNow[k].iNumber] , min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber) );
+				}
+				else if(Link[vDarkXNow[k].iNumber] == 0 && Link[vDarkXNow[k + 1].iNumber] > 0)
+				{
+					iTemp = min(Link[vDarkXNow[k + 1].iNumber] , min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber) );
+				}
+				else
+				{
+					iTemp = min(vDarkXNow[k].iNumber , vDarkXNow[k + 1].iNumber);
+				}
+				long int a = Link[vDarkXNow[k].iNumber] , b = Link[vDarkXNow[k + 1].iNumber];
+				for(int i = 0 ; i < Link.size() ; i++)
+				{
+					Link[vDarkXNow[k].iNumber] = iTemp;
+					Link[vDarkXNow[k + 1].iNumber] = iTemp;
+
+					if(Link[i] == a && a > 0)
+						Link[i] = iTemp;
+					else if(Link[i] == b && b > 0)
+						Link[i] = iTemp;
+					
+				}
 			}
 		}
 		if(vY.size() == 0 && !bOnce)
@@ -430,9 +561,45 @@ int main(int argc, char** argv)
 			bOnce = 1;
 			for(int k = 0 ; k < vDarkXNext.size() ; k = k + 2)
 			{
-				cout<<"Draw 9 dark {("<<vDarkXNext[k]<<","<<yyNext<<"),line,("<<vDarkXNext[k + 1]<<","<<yyNext<<")} [1]"<<endl;
+				//ofile<<"Draw 9 dark {("<<vDarkXNext[k].x<<","<<yyNext<<"),line,("<<vDarkXNext[k + 1].x<<","<<yyNext<<")} [1]"<<endl;
+				Segment Temp;
+				Temp.x = vDarkXNext[k].x;		Temp.y = yyNext;
+				Temp.Tx = vDarkXNext[k + 1].x;	Temp.Ty = yyNext;
+				Temp.iCase = 4;
+				vContour[vDarkXNext[k].iNumber].push_back(Temp);
+
+				long int iTemp = 0 ;
+				if(Link[vDarkXNext[k].iNumber] > 0 && Link[vDarkXNext[k + 1].iNumber] > 0)
+				{
+					iTemp = min( min(Link[vDarkXNext[k].iNumber] , Link[vDarkXNext[k + 1].iNumber]) , min(vDarkXNext[k].iNumber , vDarkXNext[k + 1].iNumber) );
+				}
+				else if(Link[vDarkXNext[k].iNumber] > 0 && Link[vDarkXNext[k + 1].iNumber] == 0)
+				{
+					iTemp = min(Link[vDarkXNext[k].iNumber] , min(vDarkXNext[k].iNumber , vDarkXNext[k + 1].iNumber) );
+				}
+				else if(Link[vDarkXNext[k].iNumber] == 0 && Link[vDarkXNext[k + 1].iNumber] > 0)
+				{
+					iTemp = min(Link[vDarkXNext[k + 1].iNumber] , min(vDarkXNext[k].iNumber , vDarkXNext[k + 1].iNumber) );
+				}
+				else
+				{
+					iTemp = min(vDarkXNext[k].iNumber , vDarkXNext[k + 1].iNumber);
+				}
+				long int a = Link[vDarkXNext[k].iNumber] , b = Link[vDarkXNext[k + 1].iNumber];
+				for(int i = 0 ; i < Link.size() ; i++)
+				{
+					Link[vDarkXNext[k].iNumber] = iTemp;
+					Link[vDarkXNext[k + 1].iNumber] = iTemp;
+
+					if(Link[i] == a && a > 0)
+						Link[i] = iTemp;
+					else if(Link[i] == b && b > 0)
+						Link[i] = iTemp;
+					
+				}
+
 			}
-		}*/
+		}
 		//	cout<<endl;
 		////處理水平線////
 
@@ -466,6 +633,38 @@ int main(int argc, char** argv)
 
 					buffer.push_back(PTemp);	//若有交點則新增回vY
 					//cout<<x<<"	"<<y<<endl;
+
+
+
+					long int iTemp = 0 ;
+					if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+					{
+						iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+					}
+					else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+					{
+						iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+					}
+					else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+					{
+						iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+					}
+					else
+					{
+						iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+					}				
+					long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+					for(int j = 0 ; j < Link.size() ; j++)
+					{
+						Link[vX[i].iNumber] = iTemp;
+						Link[vX[i + 1].iNumber] = iTemp;
+
+						if(Link[j] == a && a > 0)
+							Link[j] = iTemp;
+						else if(Link[j] == b && b > 0)
+							Link[j] = iTemp;
+						
+					}
 				}				
 			}
 			else if (vX[i].r == 0 && vX[i+1].r != 0 && vX[i].Tx > vX[i + 1].Tx)  // i = 直線  , i+1 = 弧線    (Perfect)
@@ -495,6 +694,36 @@ int main(int argc, char** argv)
 						PTemp.y = ans1_y;
 						buffer.push_back(PTemp);
 						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						long int iTemp = 0 ;
+						if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+						{
+							iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else
+						{
+							iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+						}
+						long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+						for(int j = 0 ; j < Link.size() ; j++)
+						{
+							Link[vX[i].iNumber] = iTemp;
+							Link[vX[i + 1].iNumber] = iTemp;
+
+							if(Link[j] == a && a > 0)
+								Link[j] = iTemp;
+							else if(Link[j] == b && b > 0)
+								Link[j] = iTemp;
+							
+						}
+						
 					}
 					else if (ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_x < xright && ans2_x >= xleft)
 					{
@@ -503,6 +732,36 @@ int main(int argc, char** argv)
 						PTemp.y = ans2_y;
 						buffer.push_back(PTemp);
 						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						long int iTemp = 0 ;
+						if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+						{
+							iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else
+						{
+							iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+						}
+						long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+						for(int j = 0 ; j < Link.size() ; j++)
+						{
+							Link[vX[i].iNumber] = iTemp;
+							Link[vX[i + 1].iNumber] = iTemp;
+
+							if(Link[j] == a && a > 0)
+								Link[j] = iTemp;
+							else if(Link[j] == b && b > 0)
+								Link[j] = iTemp;
+							
+						}
+					
 					}
 				}
 				else if (D == 0)
@@ -516,6 +775,35 @@ int main(int argc, char** argv)
 						PTemp.y = ans1_y;
 						buffer.push_back(PTemp);
 						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						long int iTemp = 0 ;
+						if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+						{
+							iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else
+						{
+							iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+						}
+						long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+						for(int j = 0 ; j < Link.size() ; j++)
+						{
+							Link[vX[i].iNumber] = iTemp;
+							Link[vX[i + 1].iNumber] = iTemp;
+
+							if(Link[j] == a && a > 0)
+								Link[j] = iTemp;
+							else if(Link[j] == b && b > 0)
+								Link[j] = iTemp;
+							
+						}
 
 					}
 				}
@@ -547,6 +835,35 @@ int main(int argc, char** argv)
 						PTemp.y = ans1_y;
 						buffer.push_back(PTemp);
 						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						long int iTemp = 0 ;
+						if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+						{
+							iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else
+						{
+							iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+						}
+						long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+						for(int j = 0 ; j < Link.size() ; j++)
+						{
+							Link[vX[i].iNumber] = iTemp;
+							Link[vX[i + 1].iNumber] = iTemp;
+
+							if(Link[j] == a && a > 0)
+								Link[j] = iTemp;
+							else if(Link[j] == b && b > 0)
+								Link[j] = iTemp;
+							
+						}
 					}
 					else if (ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_x < xright && ans2_x >= xleft)
 					{
@@ -555,6 +872,35 @@ int main(int argc, char** argv)
 						PTemp.y = ans2_y;
 						buffer.push_back(PTemp);
 						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						long int iTemp = 0 ;
+						if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+						{
+							iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else
+						{
+							iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+						}
+						long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+						for(int j = 0 ; j < Link.size() ; j++)
+						{
+							Link[vX[i].iNumber] = iTemp;
+							Link[vX[i + 1].iNumber] = iTemp;
+
+							if(Link[j] == a && a > 0)
+								Link[j] = iTemp;
+							else if(Link[j] == b && b > 0)
+								Link[j] = iTemp;
+							
+						}
 					}
 				}
 				else if (D == 0)
@@ -568,6 +914,35 @@ int main(int argc, char** argv)
 						PTemp.y = ans1_y;
 						buffer.push_back(PTemp);
 						//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+						long int iTemp = 0 ;
+						if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+						{
+							iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+						{
+							iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+						}
+						else
+						{
+							iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+						}
+						long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+						for(int j = 0 ; j < Link.size() ; j++)
+						{
+							Link[vX[i].iNumber] = iTemp;
+							Link[vX[i + 1].iNumber] = iTemp;
+
+							if(Link[j] == a && a > 0)
+								Link[j] = iTemp;
+							else if(Link[j] == b && b > 0)
+								Link[j] = iTemp;
+							
+						}
 
 					}
 				}
@@ -608,6 +983,35 @@ int main(int argc, char** argv)
 							PTemp.y = ans1_y;
 							buffer.push_back(PTemp);
 							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							long int iTemp = 0 ;
+							if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+							{
+								iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else
+							{
+								iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+							}
+							long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+							for(int j = 0 ; j < Link.size() ; j++)
+							{
+								Link[vX[i].iNumber] = iTemp;
+								Link[vX[i + 1].iNumber] = iTemp;
+
+								if(Link[j] == a && a > 0)
+									Link[j] = iTemp;
+								else if(Link[j] == b && b > 0)
+									Link[j] = iTemp;
+								
+							}
 						}
 						else if (ans2_y < vX[i].y && ans2_y >= vX[i].Ty && ans2_x < x1_right && ans2_x >= x1_left && ans2_y < vX[i+1].y && ans2_y >= vX[i+1].Ty && ans2_x < x2_right && ans2_x >= x2_left)
 						{
@@ -616,6 +1020,35 @@ int main(int argc, char** argv)
 							PTemp.y = ans2_y;
 							buffer.push_back(PTemp);
 							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							long int iTemp = 0 ;
+							if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+							{
+								iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else
+							{
+								iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+							}
+							long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+							for(int j = 0 ; j < Link.size() ; j++)
+							{
+								Link[vX[i].iNumber] = iTemp;
+								Link[vX[i + 1].iNumber] = iTemp;
+
+								if(Link[j] == a && a > 0)
+									Link[j] = iTemp;
+								else if(Link[j] == b && b > 0)
+									Link[j] = iTemp;
+								
+							}
 						}
 					}
 					else if (D==0)
@@ -629,6 +1062,35 @@ int main(int argc, char** argv)
 							PTemp.y = ans1_y;
 							buffer.push_back(PTemp);
 							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							long int iTemp = 0 ;
+							if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+							{
+								iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else
+							{
+								iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+							}
+							long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+							for(int j = 0 ; j < Link.size() ; j++)
+							{
+								Link[vX[i].iNumber] = iTemp;
+								Link[vX[i + 1].iNumber] = iTemp;
+
+								if(Link[j] == a && a > 0)
+									Link[j] = iTemp;
+								else if(Link[j] == b && b > 0)
+									Link[j] = iTemp;
+								
+							}
 						}
 					}
 				}
@@ -652,6 +1114,35 @@ int main(int argc, char** argv)
 							PTemp.y = ans1_y;
 							buffer.push_back(PTemp);
 							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							long int iTemp = 0 ;
+							if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+							{
+								iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else
+							{
+								iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+							}
+							long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+							for(int j = 0 ; j < Link.size() ; j++)
+							{
+								Link[vX[i].iNumber] = iTemp;
+								Link[vX[i + 1].iNumber] = iTemp;
+
+								if(Link[j] == a && a > 0)
+									Link[j] = iTemp;
+								else if(Link[j] == b && b > 0)
+									Link[j] = iTemp;
+								
+							}
 						}
 						else if (ans1_y < vX[i].y && ans1_y >= vX[i].Ty && ans2_x < vX[i].x && ans2_x >= vX[i].Tx && ans1_y < vX[i+1].y && ans1_y >= vX[i+1].Ty && ans2_x < vX[i+1].x && ans2_x >= vX[i+1].Tx)
 						{
@@ -660,6 +1151,35 @@ int main(int argc, char** argv)
 							PTemp.y = ans1_y;
 							buffer.push_back(PTemp);
 							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							long int iTemp = 0 ;
+							if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+							{
+								iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else
+							{
+								iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+							}
+							long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+							for(int j = 0 ; j < Link.size() ; j++)
+							{
+								Link[vX[i].iNumber] = iTemp;
+								Link[vX[i + 1].iNumber] = iTemp;
+
+								if(Link[j] == a && a > 0)
+									Link[j] = iTemp;
+								else if(Link[j] == b && b > 0)
+									Link[j] = iTemp;
+								
+							}
 						}
 					}
 					else if (D==0)
@@ -672,6 +1192,35 @@ int main(int argc, char** argv)
 							PTemp.y = ans1_y;
 							buffer.push_back(PTemp);
 							//printf ("x:%Lf   y:%Lf\n", PTemp.x, PTemp.y);
+							long int iTemp = 0 ;
+							if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min( min(Link[vX[i].iNumber] , Link[vX[i + 1].iNumber]) , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] > 0 && Link[vX[i + 1].iNumber] == 0)
+							{
+								iTemp = min(Link[vX[i].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else if(Link[vX[i].iNumber] == 0 && Link[vX[i + 1].iNumber] > 0)
+							{
+								iTemp = min(Link[vX[i + 1].iNumber] , min(vX[i].iNumber , vX[i + 1].iNumber) );
+							}
+							else
+							{
+								iTemp = min(vX[i].iNumber , vX[i + 1].iNumber);
+							}
+							long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
+							for(int j = 0 ; j < Link.size() ; j++)
+							{
+								Link[vX[i].iNumber] = iTemp;
+								Link[vX[i + 1].iNumber] = iTemp;
+
+								if(Link[j] == a && a > 0)
+									Link[j] = iTemp;
+								else if(Link[j] == b && b > 0)
+									Link[j] = iTemp;
+								
+							}
 						}
 					}
 				}
@@ -723,26 +1272,7 @@ int main(int argc, char** argv)
 				iTemp++;
 			}
 		}
-		/*vector <Point> vY2;		
-		for(int i = 0 ; i < vY.size() ; i++)
-		{
-			vY2.push_back(vY[i]);
-		}*/
-	
-		/*for (int i = 0; i < buffer.size(); i++){
-			vY.push_back(buffer[i]);
-		}*/
-		//sort(vY.begin(),vY.end(),MySort1);
-
-		/*for(int i = 0 ; i < vY.size() ; i++)
-		{
-			if(vY[i].x != vY2[i].x || vY[i].y != vY2[i].y)
-			{
-				int a; 
-				a = 2 ;
-			}
-		}*/
-
+		
 		buffer.clear();
 		to_insert.clear();
 ////////找交點////////		
@@ -750,33 +1280,225 @@ int main(int argc, char** argv)
 		
 	}
 	
-	ofile<<";YT";
-	int	iTemp = 0;
-	for(int i = 0 ; i < vYT.size() ; i++)
+	
+	for(int i = Link.size() - 1 ; i >= 0 ; i--)
 	{
-		for(iTemp; iTemp <= vYT[i] ; iTemp++)
+		if(Link[i] > 0)
 		{
-			ofile<<iTemp<<" ";
+			int	a = Link[i];
+			while (Link[a] != a)
+			{
+				if(Link[a] > 0)
+					a = Link[a];
+			}
+
+			if(i != a)
+			{
+				for(int j = 0 ; j < vContour[i].size() ; j++)
+					vContour[a].push_back(vContour[i][j]);
+				vContour[i].clear();
+			}
 		}
-		ofile<<endl;
+		
+	}
+	/*for(int i = vContour.size() - 1 ; i >= 0 ; i--)
+	{
+		if(vContour[i].size() == 0)
+			vContour.erase(vContour.begin() + i);
+	}*/
+
+	for(int i = 0 ; i < vContour.size() ; i++)
+	{
+		sort(vContour[i].begin(),vContour[i].end(),MySort4);
 	}
 
-	ofile<<endl;
-	ofile<<";YB";
+	int iTemp = 0;
 
-	iTemp = 0;
-	for(int i = 0 ; i < vYT.size() ; i++)
+	for(int i = 0 ; i < vContour.size() ; i++)
 	{
-		for(iTemp; iTemp <= vYT[i] ; iTemp++)
+		if(vContour[i].size() > 0)
 		{
-			ofile<<iTemp<<" ";
+			vector <Segment> Temp;
+			Temp.push_back(vContour[i][0]);
+			int iTemp = vContour[i].size();
+			for(int k = 0 ; k < iTemp ; k++)
+			//while(vContour[i].size() > 1)
+			{
+				for(int j = 1 ; j < vContour[i].size() ; j++)
+				{
+					if(vContour[i][j].a == Temp[Temp.size() - 1].a && vContour[i][j].iCase == Temp[Temp.size() - 1].iCase && vContour[i][j].bdirection == Temp[Temp.size() - 1].bdirection && fabs(vContour[i][j].x - Temp[Temp.size() - 1].Tx) <= ROUND && fabs(vContour[i][j].y - Temp[Temp.size() - 1].Ty) <= ROUND )
+					{
+						/*if(vContour[i][j].iCase == 1)
+						{
+							if(vContour[i][j].a == Temp[Temp.size() - 1].a)
+							{
+								Temp[Temp.size() - 1].Tx = vContour[i][j].Tx;
+								Temp[Temp.size() - 1].Ty = vContour[i][j].Ty;
+								vContour[i].erase(vContour[i].begin() + j); 
+								break;
+							}
+						}
+						else*/
+						{
+							Temp[Temp.size() - 1].Tx = vContour[i][j].Tx;
+							Temp[Temp.size() - 1].Ty = vContour[i][j].Ty;
+							vContour[i].erase(vContour[i].begin() + j); 
+							break;
+						}
+					}
+					else if(fabs(vContour[i][j].x - Temp[Temp.size() - 1].Tx) <= ROUND && fabs(vContour[i][j].y - Temp[Temp.size() - 1].Ty) <= ROUND )
+					{
+						Temp.push_back(vContour[i][j]);
+						vContour[i].erase(vContour[i].begin() + j); 
+						break;
+					}
+					else if(fabs(vContour[i][j].Tx - Temp[Temp.size() - 1].Tx) <= ROUND && fabs(vContour[i][j].Ty - Temp[Temp.size() - 1].Ty) <= ROUND && vContour[i][j].iCase == 4)
+					{
+						swap(vContour[i][j].Tx,vContour[i][j].x);
+
+						Temp.push_back(vContour[i][j]);
+						vContour[i].erase(vContour[i].begin() + j); 
+						break;
+					}
+				}
+			}
+			vContour[i].clear();
+			vContour[i].assign(Temp.begin() , Temp.end());
+
 		}
-		ofile<<endl;
 	}
 
-	ofile.seekg(0);
-	ofile<<iTP;
-	//system("pause");
+
+	long int iPoints = 0;
+
+	vector <PointforYTYB> sPointforYTYB;
+	//vector <vector <long int> > YB;
+	////////////////////////Output////////////////////////
+	//return 0 ;
+	for(int i = 0 ; i < vContour.size() ; i++)
+	{
+		if(vContour[i].size() > 0)
+			iTP++;
+	}
+	//ofile<<iTP<<endl;
+	iTP = 0;
+	for(int i = 0 ; i < vContour.size() ; i++)
+	{
+		if(vContour[i].size() > 0)
+		{
+			vector <Segment> vSTemp;
+			Segment	STemp;
+
+			PointforYTYB cc;
+			cc.iIndex = iTP++;			
+
+			//ofile<<vContour[i].size()<<endl;
+
+			cc.YB = vContour[i][0].y;
+			cc.XB = vContour[i][0].x;
+			cc.YT = vContour[i][0].y;
+			cc.XT = vContour[i][0].x;
+			ofile<<"Draw 9 dark {(";
+			for(int j = 0 ; j < vContour[i].size() ; j++)
+			{
+				if(vContour[i][j].y < cc.YB)
+				{
+					cc.YB = vContour[i][j].y;
+					cc.XB = vContour[i][j].x;
+				}
+				if(vContour[i][j].y > cc.YB)
+				{
+					cc.YT = vContour[i][j].y;
+					cc.XT = vContour[i][j].x;
+				}
+				
+
+				/*if(vContour[i][j].iCase == 1)
+					ofile<<iPoints++<<" 0 "<<vContour[i][j].x<<" "<<vContour[i][j].y<<endl;
+				else if(vContour[i][j].iCase == 2)
+					ofile<<iPoints++<<" 8 "<<vContour[i][j].x<<" "<<vContour[i][j].y<<" "<<vContour[i][j].Rx<<" "<<vContour[i][j].Ry<<" "<<vContour[i][j].r<<endl;
+				else if(vContour[i][j].iCase == 3)
+					ofile<<iPoints++<<" 9 "<<vContour[i][j].x<<" "<<vContour[i][j].y<<" "<<vContour[i][j].Rx<<" "<<vContour[i][j].Ry<<" "<<vContour[i][j].r<<endl;*/
+
+				if(vContour[i][j].iCase == 1 || vContour[i][j].iCase == 4)
+				{
+					ofile<<vContour[i][j].x<<","<<vContour[i][j].y<<"),line,(";
+				}
+				else if (vContour[i][j].iCase == 2)
+				{
+					//if(fabs(vContour[i][j].x - vContour[i][j].Tx) > ROUND)
+						ofile<<vContour[i][j].x<<","<<vContour[i][j].y<<"),arc,("<<vContour[i][j].Rx<<","<<vContour[i][j].Ry<<"),CW,0.123,(";
+				}
+				else if (vContour[i][j].iCase == 3)
+				{
+					//if(fabs(vContour[i][j].x - vContour[i][j].Tx) > ROUND)
+						ofile<<vContour[i][j].x<<","<<vContour[i][j].y<<"),arc,("<<vContour[i][j].Rx<<","<<vContour[i][j].Ry<<"),CCW,0.123,(";
+				}
+
+				vContour[i][j].iNumber2 = iPoints - 1;
+				vSTemp.push_back(vContour[i][j]);
+				
+			}
+			if(vContour[i].size() > 0)
+			{
+				ofile<<vContour[i][0].x<<","<<vContour[i][0].y<<")} [1]"<<endl;
+				//return 0;
+			}
+
+			sPointforYTYB.push_back(cc);
+
+			sort(vSTemp.begin(),vSTemp.end(),MySort5);
+			long double y = vSTemp[0].y;
+
+			for(int i = 0 ; i < vSTemp.size() ; i++)
+			{ 
+				if(vSTemp[i].y == y)
+				{
+					//ofile<<vSTemp[i].iNumber2<<" ";
+				} 
+				else if(vSTemp[i].y != y)
+				{
+					y = vSTemp[i].y;
+					//ofile<<endl<<vSTemp[i].iNumber2<<" ";
+				}
+			}
+			//ofile<<endl<<endl;
+		}
+	}
+
+	/*sort(sPointforYTYB.begin(),sPointforYTYB.end(),MySortYT);
+	long double y = sPointforYTYB[0].YT;
+	ofile<<";YT"<<endl;
+	for(int i = 0 ; i < sPointforYTYB.size() ; i++)
+	{
+		if(y == sPointforYTYB[i].YT)
+			ofile<<sPointforYTYB[i].iIndex<<" ";
+		else
+		{
+			y = sPointforYTYB[i].YT;
+			ofile<<endl<<sPointforYTYB[i].iIndex<<" ";
+		}
+	}
+
+
+	sort(sPointforYTYB.begin(),sPointforYTYB.end(),MySortYB);
+	y = sPointforYTYB[0].YB;
+	ofile<<endl<<endl<<";YB"<<endl;
+	for(int i = 0 ; i < sPointforYTYB.size() ; i++)
+	{
+		if(y == sPointforYTYB[i].YB)
+			ofile<<sPointforYTYB[i].iIndex<<" ";
+		else
+		{
+			y = sPointforYTYB[i].YB;
+			ofile<<endl<<sPointforYTYB[i].iIndex<<" ";
+		}
+	}*/
+
+	////////////////////////Output////////////////////////
+
+
+
 	cout<<endl<<"RunTime : "<<clock()-t<<"ms"<<endl;
 	system("pause");
 	return 0;

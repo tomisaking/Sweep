@@ -86,7 +86,7 @@ bool MySort2 (Segment lhs, Segment rhs)
 			lhs.a = m;
 			if(rhs.a == m)
 			{
-				return rhs.Tx < lhs.Tx ; 
+				return lhs.Tx < rhs.Tx ; 
 			}
 			//return rhs.a < lhs.a;//rhs.Tx ;					//(?)
 			return lhs.a > rhs.a;
@@ -94,9 +94,9 @@ bool MySort2 (Segment lhs, Segment rhs)
 		else
 		{
 			if(lhs.Tx < lhs.x)
-				return 0;
-			else if (lhs.Tx > lhs.x)
 				return 1;
+			else if (lhs.Tx > lhs.x)
+				return 0;
 		}
 	}
 
@@ -105,12 +105,52 @@ bool MySort2 (Segment lhs, Segment rhs)
 	return lhs.x < rhs.x ; 
 }
 
+bool MySort4 (Segment lhs, Segment rhs)
+{
+
+
+	
+	if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 1)
+		return lhs.y < rhs.y;
+	if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 0)
+		return lhs.y > rhs.y;
+	return lhs.bdirection < rhs.bdirection ;
+}
+
+
 bool MySort3 (Segment lhs, Segment rhs)
 {
 	return lhs.iNumber > rhs.iNumber ; 
 }
 
+bool MySort5 (Segment lhs, Segment rhs)
+{ 	
+	//return lhs.dScore > rhs.dScore ; 
+	if(lhs.y == rhs.y)
+		return lhs.x < rhs.x;
+	return lhs.y > rhs.y ; 
+}
 
+
+bool MySort6 (ForHorizontal lhs, ForHorizontal rhs)
+{ 	
+	return lhs.x < rhs.x;
+}
+
+
+
+bool MySortYT (PointforYTYB lhs, PointforYTYB rhs)
+{
+	if(lhs.YT == rhs.YT)
+		return lhs.XT < rhs.XT;
+	return lhs.YT > rhs.YT;
+}
+bool MySortYB (PointforYTYB lhs, PointforYTYB rhs)
+{
+	if(lhs.YB == rhs.YB)
+		return lhs.XB < rhs.XB;
+	return lhs.YB > rhs.YB;
+}
 bool bCross (Point L,Point R)
 {
 	bool r = 0;
@@ -163,3 +203,5 @@ void InitialY(vector <Point> &vY)
 		FindLinearEquation(vY[i]);	
 	}
 }
+
+
