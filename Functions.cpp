@@ -115,6 +115,12 @@ bool MySort4 (Segment lhs, Segment rhs)
 	if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 0)
 		return lhs.y > rhs.y;
 	return lhs.bdirection < rhs.bdirection ;
+
+	/*if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 1)
+		return lhs.y > rhs.y;
+	if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 0)
+		return lhs.y < rhs.y;
+	return lhs.bdirection > rhs.bdirection ;*/
 }
 
 
