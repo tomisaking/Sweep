@@ -21,7 +21,7 @@ vector <Point> vY;
 vector <Segment> vX;		
 vector <ForHorizontal> vDarkXNext;
 long double yyNext = -1;
-string s = "C:\\Users\\S100\\Desktop\\Allen\\Sweep\\EPC16U88.TOP - Ori.ctu3";
+string s = "C:\\Users\\100\\Desktop\\Sweep\\01_top.art.ctu3";
 bool bOnce = 0;
 long int iTP = 0;
 //TOM edit
@@ -196,6 +196,7 @@ int main(int argc, char** argv)
 	
 	while(vY.size() > 0)
 	{
+		
 		//InitialY(vY);     //Sorting
 		long double dTop = vY[vY.size() - 1].y;
 		//printf("%f\n",dTop);
@@ -383,10 +384,10 @@ int main(int argc, char** argv)
 					{
 						for(int i = vContour[STemp.iNumber].size() - 1 ; i >= 0/*vContour[STemp.iNumber].size() - 4*/ ; i--)
 						{
-							if(vContour[STemp.iNumber][i].Tx == STemp.x && vContour[STemp.iNumber][i].Ty == STemp.y && vContour[STemp.iNumber][i].bdirection == STemp.bdirection && vContour[STemp.iNumber][i].a == STemp.a && vContour[STemp.iNumber][i].iCase == STemp.iCase)
+							if(fabs(vContour[STemp.iNumber][i].x - STemp.Tx) <= ROUND && vContour[STemp.iNumber][i].y == STemp.Ty && vContour[STemp.iNumber][i].bdirection == STemp.bdirection && vContour[STemp.iNumber][i].a == STemp.a && vContour[STemp.iNumber][i].iCase == STemp.iCase)
 							{
-								vContour[STemp.iNumber][i].Tx = STemp.Tx;
-								vContour[STemp.iNumber][i].Ty = STemp.Ty;
+								vContour[STemp.iNumber][i].x = STemp.x;
+								vContour[STemp.iNumber][i].y = STemp.y;
 								bTemp = 1;
 								break;
 							}
@@ -406,7 +407,7 @@ int main(int argc, char** argv)
 					{
 						for(int j = vContour[Test2[i].iNumber].size() - 1 ; j >= 0/*vContour[Test2[i].iNumber].size() - 4*/ ; j--)
 						{
-							if(vContour[Test2[i].iNumber][j].Tx == Test2[i].x && vContour[Test2[i].iNumber][j].Ty == Test2[i].y && vContour[Test2[i].iNumber][j].bdirection == Test2[i].bdirection && vContour[Test2[i].iNumber][j].a == Test2[i].a && vContour[Test2[i].iNumber][j].iCase == Test2[i].iCase)
+							if(fabs(vContour[Test2[i].iNumber][j].Tx - Test2[i].x) <= ROUND && vContour[Test2[i].iNumber][j].Ty == Test2[i].y && vContour[Test2[i].iNumber][j].bdirection == Test2[i].bdirection && vContour[Test2[i].iNumber][j].a == Test2[i].a && vContour[Test2[i].iNumber][j].iCase == Test2[i].iCase)
 							{
 								vContour[Test2[i].iNumber][j].Tx = Test2[i].Tx;
 								vContour[Test2[i].iNumber][j].Ty = Test2[i].Ty;
@@ -474,11 +475,12 @@ int main(int argc, char** argv)
 				if(fabs(vDarkXNow[k].x - vDarkXNow[k + 1].x) > ROUND)
 				{
 					//ofile<<"Draw 9 dark {("<<vDarkXNow[k].x<<","<<yyNow<<"),line,("<<vDarkXNow[k + 1].x<<","<<yyNow<<")} [1]"<<endl;
-
 					Segment Temp;
 					Temp.x = vDarkXNow[k].x;		Temp.y = yyNow;
 					Temp.Tx = vDarkXNow[k + 1].x;	Temp.Ty = yyNow;
 					Temp.iCase = 4;
+					if(Temp.x == Temp.Tx && Temp.y == Temp.Ty)
+						continue;
 					vContour[vDarkXNow[k].iNumber].push_back(Temp);
 					long int iTemp = 0 ;
 					if(Link[vDarkXNow[k].iNumber] > 0 && Link[vDarkXNow[k + 1].iNumber] > 0)
@@ -500,7 +502,6 @@ int main(int argc, char** argv)
 					long int a = Link[vDarkXNow[k].iNumber] , b = Link[vDarkXNow[k + 1].iNumber];
 					Link[vDarkXNow[k].iNumber] = iTemp;
 					Link[vDarkXNow[k + 1].iNumber] = iTemp;
-
 
 					if(a > 0)
 					{
@@ -541,6 +542,8 @@ int main(int argc, char** argv)
 				Temp.x = vDarkXPre[k].x;		Temp.y = yyPre;
 				Temp.Tx = vDarkXPre[k + 1].x;	Temp.Ty = yyPre;
 				Temp.iCase = 4;
+				if(Temp.x == Temp.Tx && Temp.y == Temp.Ty)
+					continue;
 				vContour[vDarkXPre[k].iNumber].push_back(Temp);
 
 				long int iTemp = 0 ;
@@ -597,6 +600,8 @@ int main(int argc, char** argv)
 				Temp.x = vDarkXNow[k].x;		Temp.y = yyNow;
 				Temp.Tx = vDarkXNow[k + 1].x;	Temp.Ty = yyNow;
 				Temp.iCase = 4;
+				if(Temp.x == Temp.Tx && Temp.y == Temp.Ty)
+					continue;
 				vContour[vDarkXNow[k].iNumber].push_back(Temp);
 
 				long int iTemp = 0 ;
@@ -657,6 +662,8 @@ int main(int argc, char** argv)
 				Temp.x = vDarkXNext[k].x;		Temp.y = yyNext;
 				Temp.Tx = vDarkXNext[k + 1].x;	Temp.Ty = yyNext;
 				Temp.iCase = 4;
+				if(Temp.x == Temp.Tx && Temp.y == Temp.Ty)
+					continue;
 				vContour[vDarkXNext[k].iNumber].push_back(Temp);
 
 				long int iTemp = 0 ;
@@ -1229,7 +1236,7 @@ int main(int argc, char** argv)
 							long int a = Link[vX[i].iNumber] , b = Link[vX[i + 1].iNumber];
 							Link[vX[i].iNumber] = iTemp;
 							Link[vX[i + 1].iNumber] = iTemp;
-
+							
 							if(a > 0)
 							{
 								while(a != iTemp)
@@ -1738,6 +1745,17 @@ int main(int argc, char** argv)
 				break;
 
 			}
+			else if(vUnContour[i][0].iCase == 1 && vUnContour[j][vUnContour[j].size() - 1].iCase == 1 && vUnContour[i][0].a == vUnContour[j][vUnContour[j].size() - 1].a && i != j)
+			{
+				if((vUnContour[i][0].x <= vUnContour[j][vUnContour[j].size() - 1].Tx && vUnContour[i][0].x >= vUnContour[j][vUnContour[j].size() - 1].x)
+				&& (vUnContour[i][0].y <= vUnContour[j][vUnContour[j].size() - 1].Ty && vUnContour[i][0].y >= vUnContour[j][vUnContour[j].size() - 1].y))
+				{
+					for(int k = 0 ; k < vUnContour[i].size() ; k++)
+						vUnContour[j].push_back(vUnContour[i][k]);
+					vUnContour.erase(vUnContour.begin() + i); 
+					break;
+				}
+			}
 		}
 
 	}
@@ -1749,16 +1767,6 @@ int main(int argc, char** argv)
 	{
 		if( /*fabs(vUnContour[i][0].x - vUnContour[i][vUnContour[i].size() - 1].Tx) <= ROUND && fabs(vUnContour[i][0].y - vUnContour[i][vUnContour[i].size() - 1].Ty) <= ROUND &&*/ vUnContour[i].size() > 1)
 			vContour.push_back(vUnContour[i]);
-		/*if(vContour.size() == 5382)	//170
-		{
-			cout<<"714 i :"<<i<<endl;
-		}*/
-		/*if( fabs(vUnContour[i][0].x - vUnContour[i][vUnContour[i].size() - 1].Tx) > ROUND && fabs(vUnContour[i][0].y - vUnContour[i][vUnContour[i].size() - 1].Ty) > ROUND && vUnContour[i].size() > 1)
-		{
-			vContour.push_back(vUnContour[i]);
-			//cout<<vUnContour[i][0].x<<"	";
-			//cout<<vUnContour[i][vUnContour[i].size() - 1].Tx<<endl;
-		}*/
 	}
 	//cout<<"Fianl vContour Size :"<<vContour.size()<<endl;
 	int iStillUnContour = 0 ;
@@ -1771,7 +1779,7 @@ int main(int argc, char** argv)
 			if( fabs(vContour[i][0].x - vContour[i][vContour[i].size() -1].Tx) > ROUND || fabs(vContour[i][0].y - vContour[i][vContour[i].size() -1].Ty) > ROUND)
 			{
 				iStillUnContour++;
-				cout<<iTTemp<<endl;
+				//cout<<iTTemp<<endl;
 			}
 		}
 	}
@@ -1801,7 +1809,7 @@ int main(int argc, char** argv)
 			cc.XB = vContour[i][0].x;
 			cc.YT = vContour[i][0].y;
 			cc.XT = vContour[i][0].x;
-			ofile<<"Draw 9 dark {(";
+			ofile<<"Draw "<<i<<" dark {(";
 			for(int j = 0 ; j < vContour[i].size() ; j++)
 			{
 				if(vContour[i][j].y < cc.YB)
@@ -1842,7 +1850,7 @@ int main(int argc, char** argv)
 				vSTemp.push_back(vContour[i][j]);
 				
 			}
-			if(vContour[i].size() > 1)
+			//if(vContour[i].size() == 1)
 			{
 				/*if( fabs(vContour[i][0].x - vContour[i][vContour[i].size() - 1].Tx) > ROUND || fabs(vContour[i][0].y - vContour[i][vContour[i].size() - 1].Ty) > ROUND)
 				{
