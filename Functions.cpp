@@ -27,7 +27,7 @@ bool MySort2 (Segment lhs, Segment rhs)
 
 		if ( (l_a == 0) || (r_a == 0) ) 
 		{
-			if(rhs.Tx < lhs.Tx)
+			if(rhs.Tx <= lhs.Tx)
 				return 0;
 			else if (rhs.Tx > lhs.x)
 				return 1;
@@ -64,7 +64,7 @@ bool MySort2 (Segment lhs, Segment rhs)
 		}
 		else
 		{
-			if(rhs.Tx < rhs.x)
+			if(rhs.Tx <= rhs.x)
 				return 0;
 			else if (rhs.Tx > rhs.x)
 				return 1;
@@ -93,7 +93,7 @@ bool MySort2 (Segment lhs, Segment rhs)
 		}
 		else
 		{
-			if(lhs.Tx < lhs.x)
+			if(lhs.Tx <= lhs.x)
 				return 1;
 			else if (lhs.Tx > lhs.x)
 				return 0;
@@ -111,9 +111,17 @@ bool MySort4 (Segment lhs, Segment rhs)
 
 	
 	if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 1)
+	{
+		if(lhs.y == rhs.y)
+			return lhs.x < rhs.x;
 		return lhs.y < rhs.y;
+	}
 	if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 0)
+	{
+		if(lhs.y == rhs.y)
+			return lhs.x < rhs.x;
 		return lhs.y > rhs.y;
+	}
 	return lhs.bdirection < rhs.bdirection ;
 
 	/*if(lhs.bdirection == rhs.bdirection && lhs.bdirection == 1)

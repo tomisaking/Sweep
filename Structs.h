@@ -21,6 +21,10 @@ struct Segment
 	//long double e,f,g;  // ey^2 + fy + g = 0;
 	long double r; // radius
 
+
+	//vector <long double> vCrossX;
+	//vector <long double> vCrossY;
+
 	bool bdirection;	// Up : 1
 };
 struct Point
